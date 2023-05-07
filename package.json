@@ -42,7 +42,7 @@
     "@types/react": "~18.0.14",
     "typescript": "^4.9.4"
   },
-  "main": "react-native-components",
+
   "description": "react-native-components",
   "repository": {
     "type": "git",

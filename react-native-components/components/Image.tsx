@@ -9,7 +9,7 @@ import { Image as DefaultImage } from "expo-image";
 import { config } from "../config.default";
 
 function RenderBadge({ ...props }: ImageProps["badge"]) {
-  const { spacing, icon_size, radius, Colors } = useLayout();
+  const { spacing, icon_size, radius } = useLayout();
 
   const style = useMemo(() => {
     const position = props.position;
@@ -68,8 +68,6 @@ function RenderBadge({ ...props }: ImageProps["badge"]) {
 }
 
 function Image({ ...props }: ImageProps) {
-  const { radius, spacing, icon_size } = useLayout();
-  const [url, setUrl] = useState<ImageProps["source"]>(props.source);
   const [error, setError] = useState<boolean>(false);
   const defaultSource = config.images.icon;
 
@@ -89,7 +87,7 @@ function Image({ ...props }: ImageProps) {
 
   return (
     <>
-      <DefaultImage source={error ? defaultSource : url} onError={onError} style={props.style} />
+      <DefaultImage source={error ? defaultSource : props.source} onError={onError} style={props.style} />
       {hasBadge && <RenderBadge {...props.badge} />}
     </>
   );

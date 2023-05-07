@@ -21,7 +21,12 @@ import {
 } from "./react-native-components";
 LogBox.ignoreAllLogs(true);
 
-
+initConfig({
+  fonts: {
+    regular: require("./assets/fonts/regular.ttf"),
+    bold: require("./assets/fonts/bold.ttf"),
+  },
+});
 
 export default function App() {
   const { spacing, icon_size, Colors } = useLayout();
@@ -60,7 +65,7 @@ export default function App() {
                 component: (info) => {
                   return (
                     <View>
-                      <Text>{info.title}</Text>
+                      <Text bold>{info.title}</Text>
                     </View>
                   );
                 },

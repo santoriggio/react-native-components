@@ -19,6 +19,8 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { config } from "../config.default";
 
+const hasRegular = typeof config.fonts.regular != "undefined";
+
 function Input({ value, onChange, ...component }: InputProps) {
   const { spacing, icon_size, radius, fontSize, Colors } = useLayout();
 
@@ -143,7 +145,7 @@ function Input({ value, onChange, ...component }: InputProps) {
             },
             textInput: {
               color: Colors.text,
-              fontFamily: "regular",
+              fontFamily: hasRegular ? "regular" : undefined,
               includeFontPadding: false,
               marginBottom: 0,
               borderRadius: radius,

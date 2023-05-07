@@ -16,37 +16,37 @@ export const sizes = {
   "6xl": 32,
 };
 
-type Config = {
+export type ConfigType = {
   spacing: any;
   query_change_time: number;
   sizes: Partial<typeof sizes>;
   fonts: {
-    bold: FontSource;
-    regular: FontSource;
+    bold?: FontSource;
+    regular?: FontSource;
   };
   images: {
-    icon: string;
+    icon?: string;
     logo?: string;
   };
   googlePlacesAutocompleteKey: string;
 };
 
-export let config: Config = {
+export let config: ConfigType = {
   spacing: 12,
   query_change_time: 350,
   sizes,
   fonts: {
-    bold: require("../assets/fonts/bold.ttf"),
-    regular: require("../assets/fonts/regular.ttf"),
+    bold: undefined,
+    regular: undefined,
   },
   images: {
-    icon: require("../assets/images/icon.png"),
+    icon: undefined,
   },
   googlePlacesAutocompleteKey: "",
 };
 
-export function initConfig(options: Partial<Config>) {
-  const keys = Object.keys(options) as (keyof Config)[];
+export function initConfig(options: Partial<ConfigType>) {
+  const keys = Object.keys(options) as (keyof ConfigType)[];
 
   let formatted: any = {
     ...config,
