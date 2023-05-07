@@ -1,6 +1,6 @@
-# React Native Components
+# react-native-components
 
-React Native Components is a collection of reusable components for building mobile applications using React Native. This package provides a set of ready-to-use UI components that can be easily integrated into your React Native projects.
+react-native-components is a collection of reusable components for building mobile applications using React Native. This package provides a set of ready-to-use UI components that can be easily integrated into your React Native projects.
 
 ## Features
 
@@ -12,11 +12,7 @@ React Native Components is a collection of reusable components for building mobi
 
 ## Installation
 
-To install React Native Components, follow these steps:
-
-1. Ensure that you have React Native installed and set up in your project.
-2. Open your terminal and navigate to your project's root directory.
-3. Run the following command to install the package from npm:
+To install React Native Components:
 
 ```shell
 npm install @santoriggio/react-native-components
@@ -25,3 +21,8 @@ npm install @santoriggio/react-native-components
 ## Usage
 
 Once you have installed the package, you can start using the components in your React Native project.
+
+
+## Credits
+
+react-native-components is maintained and developed by [Santo Riggio](https://github.com/santoriggio) and the open-source community.
