@@ -1,3 +1,8 @@
+# NOT STABLE
+
+This library is currently under development and testing, and it is not recommended for production use
+
+
 # react-native-components
 
 react-native-components is a collection of reusable components for building mobile applications using React Native. This package provides a set of ready-to-use UI components that can be easily integrated into your React Native projects.
