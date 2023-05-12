@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { View, Image as RNImage } from "react-native";
 import keyExist from "../functions/keyExist";
 import useLayout from "../hooks/useLayout";
 import Icon from "./Icon";
 import Text from "./Text";
 import { ImageProps } from "../types";
 import { Image as DefaultImage } from "expo-image";
-import { config } from "../config.default";
+import config from "../utils/Config";
+import { isPinOrFingerprintSetSync } from "react-native-device-info";
 
 function RenderBadge({ ...props }: ImageProps["badge"]) {
   const { spacing, icon_size, radius } = useLayout();
@@ -26,7 +27,7 @@ function RenderBadge({ ...props }: ImageProps["badge"]) {
       right: undefined,
     };
 
-    const offset = -spacing * 0.2;
+    const offset = 0;
 
     if (vPosition == "top") {
       positions.top = offset;
@@ -68,11 +69,16 @@ function RenderBadge({ ...props }: ImageProps["badge"]) {
 }
 
 function Image({ ...props }: ImageProps) {
-  const [error, setError] = useState<boolean>(false);
-  const defaultSource = config.images.icon;
+  const [error, setError] = useState<boolean | undefined>(undefined);
+  const currentConfig = config.getConfig();
+  const defaultSource = currentConfig.images.icon;
 
   useEffect(() => {
-    if (typeof props.source == "undefined") onError();
+    if (typeof props.source == "string" && props.source.length > 10) {
+      setError(false);
+    } else {
+      onError();
+    }
   }, []);
 
   const hasBadge = useMemo(() => {
@@ -87,7 +93,13 @@ function Image({ ...props }: ImageProps) {
 
   return (
     <>
-      <DefaultImage source={error ? defaultSource : props.source} onError={onError} style={props.style} />
+      <DefaultImage
+        {...props}
+        source={
+          error == false && typeof props.source == "string" && props.source.length > 10 ? props.source : defaultSource
+        }
+        onError={onError}
+      />
       {hasBadge && <RenderBadge {...props.badge} />}
     </>
   );

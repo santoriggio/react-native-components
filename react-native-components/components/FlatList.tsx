@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
-import { ActivityIndicator, ListRenderItem, RefreshControl } from "react-native";
+import { ActivityIndicator, ListRenderItem, RefreshControl, FlatList as DefaultFlatList } from "react-native";
 import keyExist from "../functions/keyExist";
 import sendApiRequest from "../functions/sendApiRequest";
 import { FlatListMethods, FlatListProps } from "../types";
@@ -8,24 +8,52 @@ import NoData from "./NoData";
 import Text from "./Text";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import ListItem from "./ListItem";
-import { Loading, useLayout } from "..";
+import { Loading, useLayout, deepMerge } from "..";
 
-const FlatList = forwardRef<FlatListMethods, FlatListProps>(
+const AnimatedFlatList = Animated.createAnimatedComponent<any>(DefaultFlatList);
+
+const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
   (
-    { endpoint, query, params, canRefresh, enableDebugLogs, structure, path, handleErrors, scrollY, scrollX, ...props },
-    ref
-  ) => {
-    const { spacing } = useLayout();
-    const { data, isLoading, refresh, refreshing, hasMore, loadMore, details } = useGetListData({
-      data: props.data,
+    {
       endpoint,
       query,
       params,
+      unread,
+      selected,
+      //canRefresh,
+      enableDebugLogs,
+      structure,
+      mergeParams = {},
+      path,
+      handleErrors,
+      onPressItem,
+      onLongPressItem,
+      scrollY,
+      scrollX,
+      onLoadEnd,
+      keysPath,
+      ...props
+    },
+    ref
+  ) => {
+    const { spacing } = useLayout();
+
+    const currentFlatlist = useRef<any>();
+
+    const { data, isLoading, refresh, refreshing, hasMore, loadMore } = useGetListData({
+      data: props.data,
+      endpoint,
+      query,
+      params: deepMerge(params, mergeParams),
+      onLoadEnd,
       enableDebugLogs,
       structure,
       path,
+      keysPath,
       handleErrors,
     });
+
+   
 
     const onScroll = useAnimatedScrollHandler({
       onScroll: (event) => {
@@ -34,6 +62,34 @@ const FlatList = forwardRef<FlatListMethods, FlatListProps>(
         }
       },
     });
+
+    useImperativeHandle(ref, () => ({
+      scrollToEnd(params?) {
+        currentFlatlist.current.scrollToEnd(params);
+      },
+      scrollToIndex(params) {
+        currentFlatlist.current.scrollToIndex(params);
+      },
+      refresh
+    }));
+
+    // const onPress = useCallback(
+    //   (item: any) => {
+    //     if (typeof onPressItem != "undefined") {
+    //       return onPressItem(item);
+    //     }
+    //   },
+    //   [JSON.stringify(onPressItem)]
+    // );
+
+    // const onLongPress = useCallback(
+    //   (item: any) => {
+    //     if (typeof onLongPressItem != "undefined") {
+    //       onLongPressItem(item);
+    //     }
+    //   },
+    //   [JSON.stringify(onLongPressItem)]
+    // );
 
     const onEndReached = useCallback(() => {
       loadMore();
@@ -47,44 +103,52 @@ const FlatList = forwardRef<FlatListMethods, FlatListProps>(
 
     if (typeof data == "undefined") {
       return (
-        <Text style={{ padding: 10, textAlign: "center" }}>
+        <Text style={{ padding: spacing, textAlign: "center" }}>
           No data found, please provide one of these two keys to see some data data / endpoint
         </Text>
       );
     }
 
+
+
     if (data.length == 0) {
       return <NoData icon="database" onRefresh={refresh} refreshing={refreshing} />;
     }
 
-    const renderItem: ListRenderItem<{
-      content: ScreenDrawerComponent[];
-    }> = ({ item, index }) => {
+    const renderItem = ({ item, index }: any) => {
       if (typeof props.renderItem != "undefined" && props.renderItem != null) {
         return props.renderItem;
       }
 
-      return <ListItem {...item} defaultDetails={details} />;
+      return (
+        <ListItem
+          onPress={onPressItem}
+          onLongPress={onLongPressItem}
+          unread={typeof unread != "undefined" ? unread.some((x) => x == item.id) : undefined}
+          selected={typeof selected != "undefined" ? selected.some((x) => x.id == item.id) : undefined}
+          {...item}
+        />
+      );
     };
 
     return (
-      <Animated.FlatList
-        ref={ref}
-        data={data}
+      <AnimatedFlatList
+        ref={currentFlatlist}
         onScroll={onScroll}
         scrollEventThrottle={16}
         keyExtractor={keyExtractor}
-        renderItem={renderItem}
         onEndReached={onEndReached}
         onEndReachedThreshold={props.onEndReachedThreshold ? props.onEndReachedThreshold : 0.8}
-        refreshControl={
-          typeof canRefresh == "undefined" || canRefresh == true ? (
-            <RefreshControl refreshing={refreshing} onRefresh={refresh} />
-          ) : undefined
-        }
+        // refreshControl={
+        //   typeof canRefresh == "undefined" || canRefresh == true ? (
+        //     <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+        //   ) : undefined
+        // }
         ListFooterComponent={
           <>{hasMore && <ActivityIndicator style={{ alignSelf: "center", marginVertical: spacing }} size="small" />}</>
         }
+        renderItem={renderItem}
+        data={data}
         {...props}
       />
     );
@@ -94,11 +158,14 @@ const FlatList = forwardRef<FlatListMethods, FlatListProps>(
 export { ListItem };
 export default FlatList;
 
-function useGetListData({ ...props }: Partial<FlatListProps>) {
-  const enableDebugLogs = keyExist<FlatListProps["enableDebugLogs"]>(props.enableDebugLogs);
-  const endpoint = keyExist<FlatListProps["endpoint"]>(props.endpoint);
+const _millis = 350;
 
-  const [data, setData] = useState<any[] | undefined>(undefined);
+function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
+  const firstRun = useRef<boolean>(true);
+  const enableDebugLogs = keyExist<FlatListProps<T>["enableDebugLogs"]>(props.enableDebugLogs);
+  const endpoint = keyExist<FlatListProps<T>["endpoint"]>(props.endpoint);
+
+  const [data, setData] = useState<T[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(false);
@@ -106,16 +173,29 @@ function useGetListData({ ...props }: Partial<FlatListProps>) {
   const page = useRef<number>(1);
   const timeout = useRef<NodeJS.Timeout>();
 
-  const [details, setDetails] = useState<any>(0);
-
   useEffect(() => {
-    getData();
-  }, []);
+    if (firstRun.current) {
+      //first run
+      getData();
+    } else {
+      if (timeout.current) clearTimeout(timeout.current);
+
+      setIsLoading(true);
+      setData(undefined);
+
+      timeout.current = setTimeout(() => {
+        page.current = 1;
+        getData();
+      }, _millis);
+    }
+
+    firstRun.current = false;
+  }, [props.query, JSON.stringify(props.params)]);
 
   const getData = async (newPage?: number) => {
     if (typeof endpoint == "undefined" || endpoint == "") {
       if (typeof keyExist(props.data) != "undefined" && props.data != null) {
-        setData(props.data);
+        setData(props.data as any);
       }
       return setIsLoading(false);
     }
@@ -123,7 +203,8 @@ function useGetListData({ ...props }: Partial<FlatListProps>) {
     setIsLoading(true);
 
     let params: any = {
-      limit: typeof props.limit != "undefined" && typeof props.limit == "number" ? props.limit : 12,
+      query: props.query,
+      limit: 12,
       page: typeof newPage != "undefined" ? newPage : 1,
     };
 
@@ -132,37 +213,51 @@ function useGetListData({ ...props }: Partial<FlatListProps>) {
     }
 
     if (typeof props.params != "undefined" && typeof props.params == "object") {
-      params = {
-        ...params,
-        ...props.params,
-      };
+      params = deepMerge(params, props.params);
     }
 
     if (enableDebugLogs) {
       console.log(`📞 Fetch at ${endpoint} with`, params);
     }
 
+  
     const apiResult = await sendApiRequest(endpoint, params);
+
+
 
     setIsLoading(false);
     setRefreshing(false);
 
+    if (typeof data == "undefined" && params.page == 1 && typeof props.onLoadEnd != "undefined") {
+      props.onLoadEnd();
+    }
+
     if (typeof apiResult.error != "undefined") {
+      
       if (enableDebugLogs) {
         console.log(`🚨 Shit, something is wrong, see this error:`, apiResult.error);
       }
 
       setHasMore(false);
 
-      const handleErrors = keyExist<FlatListProps["handleErrors"]>(props.handleErrors);
+
+
+      if (params.page == 1) {
+        setData([]);
+      }
+
+
+      const handleErrors = keyExist<FlatListProps<T>["handleErrors"]>(props.handleErrors);
 
       if (typeof handleErrors != "undefined") {
+       
+     
+       
+       
         if (typeof handleErrors[apiResult.error] != "undefined") {
           //The handler for this error exist
 
-          if (params.page == 1) {
-            setData([]);
-          }
+          
 
           return;
         }
@@ -179,17 +274,38 @@ function useGetListData({ ...props }: Partial<FlatListProps>) {
 
     if (typeof props.path != "undefined") {
       props.path.split("/").map((x) => {
-        if (x.trim() != "") {
-          toReturn = apiResult[x];
+        if (x.trim() != "" && typeof toReturn[x] != "undefined") {
+          toReturn = toReturn[x];
         }
       });
     }
 
-    setDetails(apiResult.details);
+    if (typeof props.keysPath != "undefined" && Array.isArray(props.keysPath)) {
+      props.keysPath.forEach((key) => {
+        let dataToReturn = apiResult;
+
+        key.path.split("/").map((x) => {
+          if (x.trim() != "" && typeof dataToReturn[x] != "undefined") {
+            dataToReturn = dataToReturn[x];
+          }
+        });
+
+        if (typeof key.onKeyFound != "undefined") {
+          key.onKeyFound(dataToReturn);
+        }
+      });
+    }
 
     setHasMore(toReturn.length >= params.limit);
 
     setData((prevState) => {
+
+
+
+      if (typeof prevState == 'undefined' && toReturn.length == 0) {
+        return []
+      }
+
       if (typeof prevState == "undefined" || params.page == 1) {
         return toReturn;
       }
@@ -224,5 +340,5 @@ function useGetListData({ ...props }: Partial<FlatListProps>) {
     }
   };
 
-  return { data, isLoading, refreshing, hasMore, refresh, loadMore, details };
+  return { data, isLoading, refreshing, hasMore, refresh, loadMore };
 }

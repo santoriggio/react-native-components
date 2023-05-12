@@ -62,6 +62,7 @@ const BottomSheet: FC = () => {
   const { bottom, top } = useSafeAreaInsets();
   const bottomSheetRef = useRef<DefaultBottomSheet>(null);
   const [content, setContent] = useState<ScreenDrawerComponent[]>([]);
+  const [visible,setVisible] = useState<boolean>(false)
   const _bottom = bottom === 0 ? spacing : bottom;
   const modalRef = useRef<BottomSheetMethods>();
 
@@ -73,11 +74,11 @@ const BottomSheet: FC = () => {
     BackHandler.addEventListener("hardwareBackPress", backAction);
 
     return () => BackHandler.removeEventListener("hardwareBackPress", backAction);
-  }, [JSON.stringify(content)]);
+  }, [visible]);
 
   const backAction = () => {
-    if (content.length > 0) {
-      FlagPickerController.hideModal();
+    if (visible) {
+      BottomSheetController.hide()
       return true;
     }
 
@@ -109,10 +110,13 @@ const BottomSheet: FC = () => {
       setContent(newContent);
     }
 
+
+    setVisible(true)
     bottomSheetRef.current?.snapToIndex(0);
   };
 
   const hide = () => {
+    setVisible(false)
     bottomSheetRef.current?.close();
     //setContent([]);
   };

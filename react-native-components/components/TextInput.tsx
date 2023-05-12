@@ -2,14 +2,15 @@ import React from "react";
 import { TextInputProps } from "../types";
 import { Text, TextInput as DefaultTextInput } from "react-native";
 import useLayout from "../hooks/useLayout";
-import { config } from "../config.default";
-
-const hasRegular = typeof config.fonts.regular != "undefined";
-const hasBold = typeof config.fonts.bold != "undefined";
+import config from "../utils/Config";
 
 function TextInput(props: TextInputProps) {
   const { size, bold, style, ...otherProps } = props;
   const { fontSize, Colors } = useLayout();
+  const currentConfig = config.getConfig();
+  
+  const hasRegular = typeof currentConfig.fonts.regular != "undefined";
+  const hasBold = typeof currentConfig.fonts.bold != "undefined";
 
   return (
     <DefaultTextInput
@@ -24,6 +25,7 @@ function TextInput(props: TextInputProps) {
       ]}
       cursorColor={Colors.primary}
       selectionColor={Colors.primary}
+    placeholderTextColor={Colors.gray}
       {...otherProps}
     />
   );

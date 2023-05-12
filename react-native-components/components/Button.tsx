@@ -10,118 +10,38 @@ import sendApiRequest from "../functions/sendApiRequest";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import { BottomSheetController } from "./BottomSheet";
 import { SearchPickerController } from "./SearchPicker";
-import AppSettings from "../utils/AppSettings";
-/*
- 
-  action : {
- 
-  type :'picker',
-  picker: 'search',
-  content: [
-  {
-  component:'list',
-  endpoint: '/search/list',
-  params: ['buyable']
-  }
-  ]
-  }
- 
- */
+import triggerAction from "../functions/triggerAction";
 
-function Button({ ...props }: ButtonProps) {
+function Button(props: ButtonProps) {
+  const { loading = false, active = true, role = "primary", type = "filled", ...otherProps } = props;
   const { spacing, icon_size, radius, Colors } = useLayout();
-  const [loadingState, setLoadingState] = useState<boolean>(false);
-
-  const type: ButtonProps["type"] =
-    typeof props.type != "undefined" && typeof ButtonTypes[props.type] != "undefined" ? props.type : "filled";
+  const [loadingState, setLoadingState] = useState<boolean>(loading);
 
   useEffect(() => {
-    const fLoading = keyExist<boolean>(props.loading);
-
-    if (typeof fLoading != "undefined") {
-      if (loadingState) {
-        //Nothing
-      } else {
-        setLoadingState(fLoading);
-      }
-    }
-  }, [props.loading]);
+    setLoadingState(loading);
+  }, [loading]);
 
   const onPress = async () => {
-    if (loadingState) return;
+    if (loadingState || active == false) return;
 
-    const fAction = keyExist<ButtonProps["action"]>(props.action);
-
-    if (typeof fAction != "undefined") {
-      if (typeof fAction.type != "undefined") {
-        if (fAction.type == "link") {
-          const fLink = keyExist<string>(fAction.link);
-
-          if (typeof fLink != "undefined") {
-            return Linking.openURL(fLink);
-          }
-        }
-
-        if (fAction.type == "api") {
-          const fEndpoint = keyExist<string>(fAction.endpoint);
-          const fParams = keyExist<any>(fAction.params);
-
-          if (typeof fEndpoint != "undefined") {
-            setLoadingState(true);
-
-            const apiResult = await sendApiRequest(fEndpoint, fParams);
-
-            setLoadingState(false);
-
-            if (typeof apiResult.error != "undefined") {
-              console.error("Ops", JSON.stringify(apiResult.error));
-              return;
-            }
-          }
-        }
-
-        if (fAction.type == "popup") {
-          const fContent = keyExist<ScreenDrawerComponent[]>(fAction.content);
-          if (typeof fContent != "undefined") {
-            BottomSheetController.show(fContent);
-          }
-        }
-
-        if (fAction.type == "listener") {
-          return AppSettings.emitListener(fAction.event, fAction.params);
-        }
-
-        if (fAction.type == "picker") {
-          if (fAction.picker == "search") {
-            return SearchPickerController.show(fAction);
-          }
-
-          if (fAction.picker == "flag") {
-          }
-        }
-      }
-    }
-
-    if (props.onPress) props.onPress();
+    if (typeof otherProps.action != "undefined") return triggerAction(otherProps.action);
   };
 
   const hasIcon = useMemo(() => {
-    const icon = keyExist<ButtonProps["icon"]>(props.icon);
+    const icon = keyExist<ButtonProps["icon"]>(otherProps.icon);
 
     if (typeof icon == "undefined") return false;
 
     return true;
-  }, [props.icon]);
+  }, [otherProps.icon]);
 
   const tint = useMemo(() => {
-    if (typeof props.role != "undefined") {
-      if (typeof Colors[props.role] != "undefined") {
-        return Colors[props.role];
-      }
+    if (typeof Colors[role] != "undefined") {
+      return Colors[role];
     }
 
     return Colors.primary;
-  }, [type, props.role]);
+  }, [type, role]);
 
   const background = useMemo(() => {
     if (type == "gray" || (typeof props.active != "undefined" && props.active == false)) {
@@ -133,7 +53,7 @@ function Button({ ...props }: ButtonProps) {
     }
 
     return tint;
-  }, [props.active, props.role, type, tint]);
+  }, [active, role, type, tint]);
 
   const textColor = useMemo(() => {
     let toReturn = "white";
@@ -170,14 +90,14 @@ function Button({ ...props }: ButtonProps) {
       {hasIcon && (
         <Icon family="Ionicons" name={props.icon} color={textColor} size={icon_size * 1.2} style={props.iconStyle} />
       )}
-      {typeof props.title != "undefined" && props.title.trim() != "" && (
+      {typeof otherProps.title != "undefined" && otherProps.title.trim() != "" && (
         <Text
           numberOfLines={1}
           size={typeof props.size != "undefined" ? props.size : "l"}
-          style={{ marginLeft: hasIcon ? spacing * 0.5 : undefined, color: textColor, ...props.textStyle }}
+          style={{ marginLeft: hasIcon ? spacing * 0.5 : undefined, color: textColor, ...otherProps.textStyle }}
           bold
         >
-          {props.title}
+          {otherProps.title}
         </Text>
       )}
       {loadingState == true && <ActivityIndicator size="small" color={textColor} style={{ marginLeft: spacing }} />}

@@ -1,15 +1,39 @@
+import config from "../utils/Config";
+import deepMerge from "./deepMerge";
+
 interface I {
   enpoint: string;
   params: any;
   options: {
+    /**
+     * @default 'POST'
+     */
+    method?: "POST" | "GET" | "PUT" | "DELETE";
+    /**
+     * Milliseconds to remain in cache
+     * @example 60000 is 10 minutes
+     */
     useCache?: number;
+    headers?: {
+      [key: string]: any;
+    };
   };
 }
 
-const sendApiRequest = async (endpoint: I["enpoint"], params: I["params"], options?: I["options"]) => {
+const sendApiRequest = async (
+  endpoint: I["enpoint"],
+  params: I["params"],
+  options: I["options"] = {
+    method: "POST",
+    useCache: 0,
+    headers: {},
+  }
+) => {
   if (endpoint[0] != "/") {
     endpoint = "/" + endpoint;
   }
+
+  const currentConfig = config.getConfig();
 
   // if (typeof options !== "undefined") {
   //   if (typeof options.useCache !== "undefined" && options.useCache > 0) {
@@ -26,19 +50,20 @@ const sendApiRequest = async (endpoint: I["enpoint"], params: I["params"], optio
   //   }
   // }
 
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "X-Fw360-Key": "global,2041",
-    "X-Fw360-UserToken": "D0rSaGP1A2RzQcgXyBFpM3V4n7WZwd9OhINlEJH8",
-    //   "X-Fw360-Useragent": globalThis.userAgent,
-  };
+  if (typeof currentConfig.sendApiRequest.url == "undefined") {
+    throw new Error("'url' must be set before fetch data");
+  }
 
-  const result = await fetch("https://luigi.framework360.it/m/api/app" + endpoint, {
-    method: "POST",
+  const headers = deepMerge(currentConfig.sendApiRequest.headers, options.headers);
+
+
+
+  const result = await fetch(currentConfig.sendApiRequest.url + endpoint, {
+    method: options.method,
     headers,
     body: JSON.stringify(params),
   });
+
   const json = await result.json();
 
   if (typeof json == "undefined" || json == null || Array.isArray(json)) {
@@ -48,22 +73,26 @@ const sendApiRequest = async (endpoint: I["enpoint"], params: I["params"], optio
   }
 
   if (typeof json.error != "undefined") {
-    if (json.error == "customer_token_expired") {
-      // Storage.clearStorage();
-      // Cache.clear();
+    if (typeof currentConfig.sendApiRequest.errors != "undefined") {
+      if (typeof currentConfig.sendApiRequest.errors[json.error] != "undefined") {
+        currentConfig.sendApiRequest.errors[json.error](json.error);
+      }
     }
 
-    if (json.error == "obsolete_app_version") {
-    }
+    // if (json.error == "customer_token_expired") {
+    //   // Storage.clearStorage();
+    //   // Cache.clear();
+    // }
 
-    return json;
+    // if (json.error == "obsolete_app_version") {
+    // }
   }
 
   // if (typeof options !== "undefined" && typeof options.useCache !== "undefined") {
   //   Cache.set(cache_key, [json.data, now]);
   // }
 
-  return json.data;
+  return json;
 };
 
 export default sendApiRequest;

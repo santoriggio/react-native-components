@@ -52,7 +52,6 @@ class Listener<E extends string, T> {
         remove: () => this.remove(event, index),
       };
     } else {
-      
       this.emitter[event] = {
         listener: [listener],
       };
@@ -60,7 +59,6 @@ class Listener<E extends string, T> {
       toReturn = { remove: () => this.remove(event, 0) };
     }
 
-    console.log(this.emitter);
     return toReturn;
   }
 

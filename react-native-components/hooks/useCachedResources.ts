@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { config, ConfigType } from "../config.default";
+import config, { ConfigOptions } from "../utils/Config";
 
 export default function useCachedResources() {
   const [isLoadingComplete, setLoadingComplete] = useState<boolean>(false);
@@ -11,13 +11,15 @@ export default function useCachedResources() {
       try {
         SplashScreen.preventAutoHideAsync();
 
-        if (typeof config.fonts != "undefined") {
+        const currentConfig = config.getConfig();
+
+        if (typeof currentConfig.fonts != "undefined") {
           let formattedFonts: any = {};
 
-          const keys = Object.keys(config.fonts) as (keyof ConfigType["fonts"])[];
+          const keys = Object.keys(currentConfig.fonts) as (keyof ConfigOptions["fonts"])[];
 
           keys.forEach((key) => {
-            const font = config.fonts[key];
+            const font = currentConfig.fonts[key];
 
             if (typeof font != "undefined") {
               formattedFonts[key] = font;

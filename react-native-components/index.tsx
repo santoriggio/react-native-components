@@ -1,3 +1,6 @@
+import ConfigClass from "./utils/Config";
+import { sizes } from "./utils/Utils";
+
 export { default as FlatList } from "./components/FlatList";
 export { default as Text } from "./components/Text";
 export { default as NoData } from "./components/NoData";
@@ -20,14 +23,26 @@ export { default as BottomSheet, BottomSheetController } from "./components/Bott
 export { default as SearchPicker, SearchPickerController } from "./components/SearchPicker";
 export { default as ButtonsList } from "./components/ButtonsList";
 export { default as Select } from "./components/Select";
-export type { FlatListProps, NoDataProps } from "./types";
 export { Storage, Cache } from "./utils/Storages";
 export { default as sendApiRequest } from "./functions/sendApiRequest";
 export { default as triggerAction } from "./functions/triggerAction";
 export { default as keyExist } from "./functions/keyExist";
 export { default as useCachedResources } from "./hooks/useCachedResources";
 export { default as Message, MessageController } from "./components/Message";
-export { default as useLayout, Layout } from "./hooks/useLayout";
+export { default as useLayout } from "./hooks/useLayout";
 export { default as SkeletonPlaceholder } from "./components/SkeletonPlaceholder";
 export { default as AppSettings } from "./utils/AppSettings";
-export { initConfig } from "./config.default";
+export { default as deepMerge } from "./functions/deepMerge";
+export { default as config } from "./utils/Config";
+export { default as Graph } from "./components/Graph";
+export { default as pickMedia } from "./functions/pickMedia";
+export { default as Bullet } from "./components/Bullet";
+//TYPES
+export type {
+  FlatListProps,
+  NoDataProps,
+  GraphProps,
+  ButtonsListProps,
+  ButtonsListButtonProps,
+  ButtonProps,
+} from "./types";

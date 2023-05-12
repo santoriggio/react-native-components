@@ -16,7 +16,10 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import useLayout from "../hooks/useLayout";
+import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import Icon from "./Icon";
+import ScrollView from "./ScrollView";
+import { SearchPickerController } from "./SearchPicker";
 import Text from "./Text";
 import TextInput from "./TextInput";
 
@@ -34,8 +37,9 @@ interface IHeader {
   searchBarOptions?: {
     placeholder?: string;
     onChangeText: (text: string) => void;
-    filters?: any;
+    filters?: ScreenDrawerComponent[];
     selectedFilters?: any;
+    setSelectedFilters?: any;
     style?: ViewStyle;
   };
   onChangeSize?: (x: any) => void;
@@ -155,7 +159,7 @@ function Header({ ...props }: IHeader) {
         }}
       >
         {props.left && (
-          <View style={{ position: "absolute", left: 0, flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: "70%", position: "absolute", left: 0, flexDirection: "row", alignItems: "center" }}>
             {props.left}
             {(typeof props.largeTitle == "undefined" || props.largeTitle == false) &&
               typeof props.title != "undefined" &&
@@ -230,6 +234,7 @@ function Header({ ...props }: IHeader) {
                 marginLeft: spacing,
                 marginRight: -spacing / 2,
               }}
+              size="l"
               placeholderTextColor={Colors.gray}
               clearButtonMode="while-editing"
               cursorColor={Colors.primary}
@@ -240,6 +245,27 @@ function Header({ ...props }: IHeader) {
           {typeof props.searchBarOptions.filters !== "undefined" && (
             <TouchableOpacity
               onPress={() => {
+                
+
+                SearchPickerController.show({
+                  data: props.searchBarOptions?.selectedFilters,
+                  content: props.searchBarOptions?.filters,
+                  footer: [
+                    {
+                      component: "button",
+                      title: "Applica filtri",
+                      action: () => {
+                        const filt: any = SearchPickerController.getData();
+
+                        if (typeof filt != "undefined" && Object.keys(filt).length > 0) {
+                          props.searchBarOptions?.setSelectedFilters(filt);
+                        }
+
+                        SearchPickerController.hide();
+                      },
+                    },
+                  ],
+                });
                 // setFilterVisible((prevState) => !prevState);
               }}
               activeOpacity={0.8}
@@ -249,9 +275,75 @@ function Header({ ...props }: IHeader) {
               }}
               style={{ width: spacing * 4, justifyContent: "center", alignItems: "center" }}
             >
-              <Icon family="Ionicons" name="filter" size={18} />
+              <Icon family="Ionicons" name="filter" size={icon_size * 1.2} />
             </TouchableOpacity>
           )}
+        </View>
+      )}
+
+      {typeof props.searchBarOptions != "undefined" && typeof props.searchBarOptions.selectedFilters != "undefined" && (
+        <View style={{ marginTop: spacing }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: spacing }}>
+            {Object.keys(props.searchBarOptions.selectedFilters).map((key) => {
+              const options = props.searchBarOptions?.selectedFilters[key];
+
+              const groupData = props.searchBarOptions?.filters?.filter(x=>x.id ==key )[0]
+
+ 
+
+              if (typeof options != "undefined" && Array.isArray(options) && options.length > 0)
+              return options.map((fil) => {
+                const value= groupData.items[fil]
+
+                  return (
+                    <View
+                      style={{
+                        borderRadius: radius * 0.7,
+                        backgroundColor: Colors.primary,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        paddingHorizontal: spacing * 0.5,
+                        paddingVertical: spacing * 0.2,
+                        marginRight: spacing,
+                        flexDirection: "row",
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={() => {
+                          props.searchBarOptions?.setSelectedFilters((prevState) => {
+                            let actual = prevState[key];
+
+                            actual = actual.filter((x) => x != fil);
+
+                            if (actual.length == 0) {
+                              let form = { ...prevState };
+                              delete form[key];
+                              return form;
+                            }
+
+                            return {
+                              ...prevState,
+                              [key]: actual,
+                            };
+                          });
+                        }}
+                        activeOpacity={0.5}
+                        hitSlop={{
+                          top: spacing,
+                          left: spacing,
+                          right: spacing,
+                          bottom: spacing,
+                        }}
+                        style={{ marginRight: 3 }}
+                      >
+                        <Icon name="close" color={"white"} />
+                      </TouchableOpacity>
+                      <Text style={{ color: "white" }}>{groupData.title}: {value}</Text>
+                    </View>
+                  );
+                });
+            })}
+          </ScrollView>
         </View>
       )}
     </AnimatedBlurView>

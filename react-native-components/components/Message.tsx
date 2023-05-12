@@ -1,5 +1,5 @@
 import React, { forwardRef, MutableRefObject, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Alert, AlertButton, TouchableOpacity, View } from "react-native";
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { setPath } from "react-native-reanimated/lib/types/lib/reanimated2/animation/styleAnimation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,21 +23,21 @@ type MessageMethods = {
   hide: () => void;
 };
 
-type Alert = {
+type AlertType = {
   type: "alert";
-  title?: string;
+  title: string;
   message?: string;
-  buttons?: any[];
+  buttons?: AlertButton[];
 };
 
-type Toast = {
+type ToastType = {
   type: "toast";
   title: string;
   message?: string;
   role?: "primary" | "danger" | "info" | "warning" | "success";
 };
 
-type MessageType = Alert | Toast;
+type MessageType = AlertType | ToastType;
 
 class MessageController {
   private static messageRef: MutableRefObject<MessageMethods>;
@@ -75,6 +75,10 @@ function Message({ ...props }: MessageProps) {
 
         timeout.current = setTimeout(MessageController.hide, 2000);
       }
+
+      if (newMessage.type == "alert") {
+        Alert.alert(newMessage.title, newMessage.message, newMessage.buttons);
+      }
     },
     hide: () => {
       setMessage(undefined);
@@ -87,8 +91,11 @@ function Message({ ...props }: MessageProps) {
     <AnimatedTouchableOpacity
       entering={SlideInUp}
       exiting={SlideOutUp}
-      onPress={() => {}}
+      onPress={() => {
+        setMessage(undefined);
+      }}
       style={{
+        zIndex: 10000,
         position: "absolute",
         top: 0,
         left: 0,
@@ -108,12 +115,12 @@ function Message({ ...props }: MessageProps) {
           style={{ marginRight: spacing }}
         />
       )}
-      <View>
-        <Text numberOfLines={1} size="l" style={{ color: "white" }}>
+      <View style={{ flex: 1 }}>
+        <Text numberOfLines={1} bold size="l" style={{ color: "white" }}>
           {message.title}
         </Text>
         {typeof message.message != "undefined" && message.message != "" && (
-          <Text numberOfLines={1} style={{ color: "white" }}>
+          <Text numberOfLines={2} style={{ color: "white" }}>
             {message.message}
           </Text>
         )}

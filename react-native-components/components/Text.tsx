@@ -4,13 +4,15 @@ import { Text as DefaultText } from "react-native";
 import { block } from "react-native-reanimated";
 import useLayout from "../hooks/useLayout";
 import { TextProps } from "../types";
-import { config } from "../config.default";
+import config from "../utils/Config";
 
 function Text({ ...props }: TextProps) {
   const { Colors, fontSize } = useLayout();
 
-  const hasRegular = typeof config.fonts.regular != "undefined";
-  const hasBold = typeof config.fonts.bold != "undefined";
+  const currentConfig = config.getConfig();
+
+  const hasRegular = typeof currentConfig.fonts.regular != "undefined";
+  const hasBold = typeof currentConfig.fonts.bold != "undefined";
 
   return (
     <DefaultText

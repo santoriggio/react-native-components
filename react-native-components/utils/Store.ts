@@ -10,15 +10,33 @@ class Store<T extends {}> {
   }
 
   set(key: keyof T, value: T[typeof key]) {
-    this.mmkv_store.set(key.toString(), JSON.stringify(value));
+    if (typeof value == "undefined") {
+      this.remove(key);
+    } else {
+      this.mmkv_store.set(key.toString(), JSON.stringify(value));
+    }
   }
 
   get(key: keyof T) {
-    return this.mmkv_store.getString(key.toString()) as T[typeof key];
+    if (typeof key != "undefined") {
+      const toReturn = this.mmkv_store.getString(key.toString()) as T[typeof key];
+
+      if (typeof toReturn != "undefined") return JSON.parse(toReturn);
+    }
+  }
+
+  remove(key: keyof T) {
+    if (typeof key != "undefined") {
+      this.mmkv_store.delete(key.toString());
+    }
   }
 
   getStore(): MMKV {
     return this.mmkv_store;
+  }
+
+  clear() {
+    this.mmkv_store.clearAll();
   }
 }
 

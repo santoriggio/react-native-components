@@ -17,16 +17,21 @@ import EditorHTML, { EditorHTMLController } from "./EditorHTML";
 import Button from "./Button";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { config } from "../config.default";
+import config from "../utils/Config";
 
-const hasRegular = typeof config.fonts.regular != "undefined";
-
-function Input({ value, onChange, ...component }: InputProps) {
+function Input({ value, onChange, required = false, ...component }: InputProps) {
   const { spacing, icon_size, radius, fontSize, Colors } = useLayout();
+
+  const currentConfig = config.getConfig();
+
+  const hasRegular = typeof currentConfig.fonts.regular != "undefined";
+  const hasBold = typeof currentConfig.fonts.bold != "undefined";
 
   const googleInput = useRef<GooglePlacesAutocompleteRef>(null);
 
   const [secureTextEntry, setSecureTextEntry] = useState<boolean>(false);
+
+  const [data, setData] = useState<any>(undefined);
 
   useEffect(() => {
     if (component.type === "address") {
@@ -39,11 +44,13 @@ function Input({ value, onChange, ...component }: InputProps) {
       setSecureTextEntry(true);
     }
 
-    if (typeof component.trigger != "undefined") {
-      if (typeof onChange != "undefined") {
+    if (typeof component.trigger != 'undefined') {
+      if (typeof onChange != "undefined" && typeof onChange == "function") {
         onChange(value);
       }
     }
+
+    setData(value);
   }, []);
 
   const onChangeInput = (newValue: any, details?: any) => {
@@ -55,11 +62,13 @@ function Input({ value, onChange, ...component }: InputProps) {
         return Linking.openURL(component.link);
       }
 
-      toReturn = !value;
+      toReturn = typeof data == "undefined" ? true : !data;
     }
 
+    setData(toReturn);
+
     if (typeof onChange != "undefined" && typeof onChange == "function") {
-      onChange(newValue);
+      onChange(toReturn);
     }
   };
 
@@ -77,13 +86,13 @@ function Input({ value, onChange, ...component }: InputProps) {
     if (component.type == "checkbox") {
       return (
         <TouchableOpacity
-          onPress={onChangeInput}
+          onPress={() => onChangeInput(undefined)}
           activeOpacity={0.5}
           style={{ flexDirection: "row", alignItems: "center", minHeight: spacing * 4.2 }}
         >
-          <Checkbox isChecked={value} />
+          <Checkbox isChecked={data} />
           {typeof component.placeholder !== "undefined" && (
-            <TouchableOpacity activeOpacity={0.5} onPress={onChangeInput}>
+            <TouchableOpacity activeOpacity={0.5} onPress={() => onChangeInput(undefined)}>
               <Text
                 numberOfLines={1}
                 style={{
@@ -100,7 +109,7 @@ function Input({ value, onChange, ...component }: InputProps) {
     }
 
     if (component.type == "phone") {
-      return <PhoneInput value={value} onChange={onChangeInput} />;
+      return <PhoneInput value={data} onChange={onChangeInput} />;
     }
 
     if (component.type == "address") {
@@ -171,7 +180,7 @@ function Input({ value, onChange, ...component }: InputProps) {
             },
           }}
           query={{
-            key: config.googlePlacesAutocompleteKey,
+            key: currentConfig.googlePlacesAutocompleteKey,
             language: "it",
           }}
         />
@@ -179,7 +188,7 @@ function Input({ value, onChange, ...component }: InputProps) {
     }
 
     if (component.type == "date" || component.type === "datetime" || component.type === "time") {
-      return <DateTimePicker date={value} onChangeDate={onChangeInput} mode={component.type} />;
+      return <DateTimePicker date={data} onChangeDate={onChangeInput} mode={component.type} />;
     }
 
     if (component.type == "html") {
@@ -194,7 +203,7 @@ function Input({ value, onChange, ...component }: InputProps) {
           }}
         >
           <Text numberOfLines={10} style={{ padding: spacing * 0.5, marginHorizontal: spacing * 0.5 }}>
-            {value}
+            {data}
           </Text>
           <LinearGradient
             colors={[Colors.background, Colors.background + "00"]}
@@ -207,7 +216,7 @@ function Input({ value, onChange, ...component }: InputProps) {
             title="Modifica"
             icon="pencil"
             role="info"
-            onPress={() => {
+            action={() => {
               EditorHTMLController.show(value, {
                 onSuccess: onChangeInput,
               });
@@ -233,9 +242,9 @@ function Input({ value, onChange, ...component }: InputProps) {
         }}
       >
         <TextInput
-          onChangeText={onChange}
+          onChangeText={onChangeInput}
           // textContentType="username"
-          defaultValue={value}
+          defaultValue={data}
           placeholder={
             typeof component.placeholder !== "undefined" && component.placeholder !== ""
               ? component.placeholder
@@ -249,6 +258,7 @@ function Input({ value, onChange, ...component }: InputProps) {
           size={component.size}
           style={{
             flex: 1,
+            paddingTop: component.type == "textarea" ? spacing * 1.2 : undefined,
             padding: spacing,
             minHeight: component.type === "textarea" ? spacing * 12 : spacing * 4.2,
           }}
@@ -270,14 +280,12 @@ function Input({ value, onChange, ...component }: InputProps) {
 
   return (
     <View>
-      {typeof component.title !== "undefined" && (
+      {typeof component.title != "undefined" && (
         <View style={{ marginBottom: spacing, flexDirection: "row", alignItems: "center" }}>
           <Text bold numberOfLines={1}>
             {component.title}
           </Text>
-          {typeof component.required != "undefined" && component.required && (
-            <Text style={{ color: Colors.danger }}> *</Text>
-          )}
+          {(required == true || required == 1) && <Text style={{ color: Colors.danger }}> *</Text>}
         </View>
       )}
       {renderComponent()}

@@ -28,12 +28,12 @@ type TabBarProps = {
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const TabBar = ({ ...props }: TabBarProps) => {
-  const refs = useRef<{ [key: string]: View | null }>({});
+  // const refs = useRef<{ [key: string]: View | null }>({});
   const { spacing, icon_size, radius, Colors } = useLayout();
-  const [viewWidth, setViewWidth] = useState<number>(0);
+  // const [viewWidth, setViewWidth] = useState<number>(0);
   const { width } = useWindowDimensions();
 
-  const [viewsSize, setViewsSize] = useState<any>({});
+  // const [viewsSize, setViewsSize] = useState<any>({});
 
   const [shouldFlex, setShouldFlex] = useState<boolean | undefined>(undefined);
 
@@ -54,41 +54,42 @@ const TabBar = ({ ...props }: TabBarProps) => {
   //     setViewWidth(partial);
   //   }, [JSON.stringify(viewsSize)]);
 
-  const onLayout = useCallback((e: LayoutChangeEvent, index: any) => {
-    const layout = e.nativeEvent.layout;
+  // const onLayout = useCallback((e: LayoutChangeEvent, index: any) => {
+  //   const layout = e.nativeEvent.layout;
 
-    // refs.current = {
-    //   ...refs.current,
-    //   [index]: layout,
-    // };
+  //   // refs.current = {
+  //   //   ...refs.current,
+  //   //   [index]: layout,
+  //   // };
 
-    setViewsSize((prevState: any) => {
-      //   const actualLayout = prevState[index];
+  //   setViewsSize((prevState: any) => {
+  //     //   const actualLayout = prevState[index];
 
-      //   if (typeof actualLayout != "undefined") {
-      //     if (Math.round(actualLayout.width) == Math.round(layout.width)) {
-      //       return prevState;
-      //     }
+  //     //   if (typeof actualLayout != "undefined") {
+  //     //     if (Math.round(actualLayout.width) == Math.round(layout.width)) {
+  //     //       return prevState;
+  //     //     }
 
-      //     // const seg = Math.round(width / props.tabs.length);
+  //     //     // const seg = Math.round(width / props.tabs.length);
 
-      //     // if (seg == Math.round(actualLayout.width)) {
-      //     //   return prevState;
-      //     // }
-      //   }
+  //     //     // if (seg == Math.round(actualLayout.width)) {
+  //     //     //   return prevState;
+  //     //     // }
+  //     //   }
 
-      return {
-        ...prevState,
-        [index]: layout,
-      };
-    });
-  }, []);
+  //     return {
+  //       ...prevState,
+  //       [index]: layout,
+  //     };
+  //   });
+  // }, []);
 
   //   Object.values(viewsSize).forEach((x) => {
   //     console.log(x.width);
   //   });
 
   const renderItem: ListRenderItem<any> = ({ item, index }) => {
+
     return (
       <AnimatedTouchableOpacity
         key={index}
@@ -152,7 +153,7 @@ const TabBar = ({ ...props }: TabBarProps) => {
         bounces={false}
         showsHorizontalScrollIndicator={false}
         overScrollMode="never"
-        canRefresh={false}
+        // canRefresh={false}
         onContentSizeChange={(w) => {
           if (w == width) return setShouldFlex(true);
 
@@ -173,7 +174,7 @@ const TabBar = ({ ...props }: TabBarProps) => {
 // });
 
 function TabNavigation({ ...props }: TabNavigationProps) {
-  const ref = useRef<FlatListMethods>(null);
+  const ref = useRef<any>(null);
   const { width } = useWindowDimensions();
   const selectedRef = useRef<number>(0);
   const [selectedTab, setSelectedTab] = useState<number>(0);
@@ -182,6 +183,8 @@ function TabNavigation({ ...props }: TabNavigationProps) {
   const onTabPress = useCallback((tab: any) => {
     setSelectedTab(tab);
     //@ts-ignore
+
+
     ref.current.scrollToIndex({ index: tab, animated: true });
   }, []);
 
@@ -210,7 +213,7 @@ function TabNavigation({ ...props }: TabNavigationProps) {
   const renderItem: ListRenderItem<any> = ({ item, index }) => {
     const data =
       typeof props.data != "undefined" && typeof props.data[item.id] != "undefined" ? props.data[item.id] : {};
-    console.log(props.data, item.id);
+
     return (
       <View style={{ flex: 1, width }}>
         <ScreenDrawer data={data} setData={props.setData} path={item.path} content={item.content} />
@@ -235,7 +238,7 @@ function TabNavigation({ ...props }: TabNavigationProps) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         getItemLayout={getItemLayout}
-        canRefresh={false}
+        // canRefresh={false}
       />
     </View>
   );

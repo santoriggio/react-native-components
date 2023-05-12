@@ -1,11 +1,7 @@
-import { StatusBar } from "expo-status-bar";
-import { memo, StrictMode, useEffect, useMemo, useState } from "react";
-import { LogBox, View } from "react-native";
+import { memo, StrictMode, useEffect, useMemo, useRef, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSharedValue } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
-  Checkbox,
   useLayout,
   ScreenDrawer,
   FlagPicker,
@@ -13,86 +9,128 @@ import {
   SearchPicker,
   Message,
   useCachedResources,
-  Text,
-  initConfig,
-  ButtonsList,
-  ScrollView,
-  triggerAction,
+  config,
+  Header,
 } from "./react-native-components";
-LogBox.ignoreAllLogs(true);
 
-initConfig({
+/**
+ 
+ 
+[
+  {
+   component: 'text',
+   title: 'Aggiungi prodotto'
+   icon: '',
+   margin: {
+   top:1,
+   left:1
+   },
+   action: *picker
+  },
+  {
+  component:'text',
+  }
+]
+ 
+ */
+
+// "main": "react-native-components/index.tsx",
+
+config.setConfig({
+  radius: 12,
+  images: {
+    icon: require("./assets/images/icon.png"),
+  },
   fonts: {
     regular: require("./assets/fonts/regular.ttf"),
     bold: require("./assets/fonts/bold.ttf"),
   },
+  sendApiRequest: {
+    url: "https://luigi.framework360.it/m/api/app",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Fw360-Key": "global,2041",
+      //"X-Fw360-UserToken": "D0rSaGP1A2RzQcgXyBFpM3V4n7WZwd9OhINlEJH8",
+      //"X-Fw360-Useragent": globalThis.userAgent,
+    },
+    errors: {
+      user_token_expired: (error) => {},
+    },
+  },
 });
 
 export default function App() {
-  const { spacing, icon_size, Colors } = useLayout();
-  const scrollY = useSharedValue(0);
+  const { Colors } = useLayout();
   const isLoadingComplete = useCachedResources();
-  const [data, setData] = useState<any>({});
 
-  const [headerHeight, setHeaderHeight] = useState<number>(0);
-  const [canSave, setCanSave] = useState<boolean>(false);
-  const [tabsNumber, setTabsNumber] = useState<number>(3);
+  const [query, setQuery] = useState<string>("");
+  const [data, setData] = useState<any>({});
+  const [borderVisible, setBorderVisible] = useState<boolean>(false);
+
+  const [filters, setFilters] = useState<any>({});
+  const [selectedFilters, setSelectedFilters] = useState<any>(undefined);
+
+  const flatlist = useRef<any>();
 
   if (!isLoadingComplete) return null;
 
+  const module = "manage_customers";
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider style={{ flex: 1, backgroundColor: Colors.background, paddingTop: 50 }}>
-        {/* <Navigation /> */}
+      <SafeAreaProvider style={{ flex: 1, backgroundColor: Colors.background }}>
+        <Header
+          title="react-native-components"
+          largeTitle
+          searchBarOptions={{
+            onChangeText: (text) => {
+              setQuery(text);
+            },
+            filters,
+            selectedFilters,
+            setSelectedFilters,
+          }}
+          borderBottom={borderVisible}
+        />
 
-        <ScrollView contentContainerStyle={{ padding: spacing }}>
-          <ButtonsList
-            info="Buttonslist info, this is some infos"
-            buttons={[
-              {
-                title: "AI",
-                icon: "brain",
-                color: Colors.danger,
-                titleColor: "white",
-                chevronColor: "white",
-                backgroundColor: "green",
+        <ScreenDrawer
+          content={[
+            {
+              component: "list",
+              endpoint: "/modules/records",
+              path: "data/data",
+              params: {
+                module_id: "blog_articoli",
               },
-              {
-                title: "AI",
-                icon: "person",
-                subtitle: "Ciao",
-                color: Colors.primary,
-                component: (info) => {
-                  return (
-                    <View>
-                      <Text bold>{info.title}</Text>
-                    </View>
-                  );
+            },
+          ]}
+          flatListProps={{}}
+        />
+
+        {/* <Button
+          title={`Picker: ${module}`}
+          style={{ marginHorizontal: 12 }}
+          action={() => {
+            SearchPickerController.show({
+              content: [
+                {
+                  component: "list",
+                  endpoint: "modules/records",
+                  path: "data/data",
+                  params: {
+                    module_id: module,
+                  },
                 },
-              },
-              {
-                title: "AI",
-                icon: "brain",
-                color: Colors.danger,
-              },
-              {
-                title: "AI",
-                icon: "brain",
-                color: Colors.danger,
-                component: {
-                  type: "switch",
-                  value: false,
-                  onChange: () => {},
-                },
-              },
-            ]}
-          />
-        </ScrollView>
+              ],
+            });
+          }}
+        /> */}
 
         <FlagPicker />
         <SearchPicker />
-        <Message />
         <BottomSheet />
+        <Message />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

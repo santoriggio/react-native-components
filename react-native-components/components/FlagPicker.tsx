@@ -13,12 +13,18 @@ import { BackHandler, ListRenderItem, Modal, Platform, TouchableOpacity } from "
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useLayout from "../hooks/useLayout";
+import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import { Flags } from "../utils/Flags";
 import Flag, { FlagType } from "./Flag";
 import FlatList from "./FlatList";
 import Header from "./Header";
 import Icon from "./Icon";
 import Text from "./Text";
+
+type Options = {
+  content: ScreenDrawerComponent[];
+  onSuccess?: (selected: FlagType) => void;
+};
 
 export type CustomModalRef = {
   show: (options: any) => void;
@@ -31,11 +37,11 @@ class FlagPickerController {
     this.modalRef = ref;
   };
 
-  static showModal = (options: any) => {
+  static show = (options: Options) => {
     this.modalRef.current?.show(options);
   };
 
-  static hideModal = () => {
+  static hide = () => {
     this.modalRef.current?.hide();
   };
 }
@@ -62,7 +68,7 @@ function FlagPicker() {
 
   const backAction = () => {
     if (modalVisible) {
-      FlagPickerController.hideModal();
+      FlagPickerController.hide();
       return true;
     }
 
@@ -75,6 +81,7 @@ function FlagPicker() {
       setOptions(options);
     },
     hide: () => {
+      setFlags(Flags);
       setModalVisible(false);
     },
   }));
@@ -83,7 +90,7 @@ function FlagPicker() {
     return (
       <TouchableOpacity
         onPress={() => {
-          FlagPickerController.hideModal();
+          FlagPickerController.hide();
         }}
         activeOpacity={0.5}
         style={{ height: spacing * 4, width: spacing * 4, justifyContent: "center", alignItems: "center" }}
@@ -97,7 +104,7 @@ function FlagPicker() {
     return (
       <TouchableOpacity
         onPress={() => {
-          FlagPickerController.hideModal();
+          FlagPickerController.hide();
           options.onSuccess(item);
         }}
         activeOpacity={0.5}

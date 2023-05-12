@@ -2,9 +2,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { isValidElement } from "react";
 import { StyleSheet, Switch, SwitchChangeEvent, TouchableOpacity, View, ViewStyle } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
+import triggerAction from "../functions/triggerAction";
 
 import useLayout from "../hooks/useLayout";
-import { ButtonsListProps } from "../types";
+import { ButtonsListButtonProps, ButtonsListProps } from "../types";
 import Icon from "./Icon";
 import Text from "./Text";
 
@@ -18,16 +19,28 @@ function ButtonsList(props: ButtonsListProps) {
     <Animated.View style={otherProps.style} entering={animated ? FadeIn : undefined}>
       <View style={{ borderRadius: radius, overflow: "hidden" }}>
         {props.buttons.map((button, index) => {
+          const { backgroundColor = Colors.card, titleColor = Colors.text, subtitleColor = Colors.gray } = button;
+
+          const onPress = () => {
+            if (typeof button.action != "undefined") {
+              return triggerAction<ButtonsListButtonProps>(button.action, button);
+            }
+
+            if (typeof button.onPress != "undefined") {
+              return button.onPress(button);
+            }
+          };
+
           return (
             <TouchableOpacity
               key={index}
-              onPress={button.onPress}
-              disabled={typeof button.onPress == "undefined"}
+              onPress={onPress}
+              disabled={typeof button.onPress == "undefined" && typeof button.action == "undefined"}
               activeOpacity={0.5}
               style={{
                 padding: spacing * 0.5,
                 flexDirection: "row",
-                backgroundColor: typeof button.backgroundColor != "undefined" ? button.backgroundColor : Colors.card,
+                backgroundColor,
                 alignItems: "center",
               }}
             >
@@ -59,17 +72,13 @@ function ButtonsList(props: ButtonsListProps) {
                   <Text
                     numberOfLines={1}
                     style={{
-                      color: typeof button.titleColor != "undefined" ? button.titleColor : Colors.text,
+                      color: titleColor,
                     }}
                   >
                     {button.title}
                   </Text>
                   {typeof button.subtitle != "undefined" && button.subtitle != "" && (
-                    <Text
-                      numberOfLines={1}
-                      style={{ color: typeof button.subtitleColor != "undefined" ? button.subtitleColor : Colors.gray }}
-                      size="s"
-                    >
+                    <Text numberOfLines={1} style={{ color: subtitleColor }} size="s">
                       {button.subtitle}
                     </Text>
                   )}
@@ -98,7 +107,7 @@ function ButtonsList(props: ButtonsListProps) {
           );
         })}
       </View>
-      {typeof props.info !== "undefined" && (
+      {typeof otherProps.info != "undefined" && otherProps.info != "" && (
         <View
           style={{
             marginLeft: buttonHeight + spacing * 1.5,
@@ -108,7 +117,7 @@ function ButtonsList(props: ButtonsListProps) {
           }}
         >
           <Text numberOfLines={2} size="s" style={{ flex: 1, color: Colors.gray }}>
-            {props.info}
+            {otherProps.info}
           </Text>
         </View>
       )}

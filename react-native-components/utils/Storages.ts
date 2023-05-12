@@ -1,7 +1,6 @@
 import Store from "./Store";
 
-import { CacheType, StorageType } from "../../config.default";
 
-export const Storage = new Store<StorageType>("default");
+export const Storage = new Store<any>("default");
 
-export const Cache = new Store<CacheType>("cache");
+export const Cache = new Store<any>("cache");

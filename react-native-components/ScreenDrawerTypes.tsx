@@ -1,10 +1,10 @@
 import { ViewStyle } from "react-native/types";
-import { config } from "./config.default";
 
 import {
   AccordionProps,
   Action,
   ButtonProps,
+  ButtonsListProps,
   CartProps,
   FlatListProps,
   GraphProps,
@@ -12,11 +12,13 @@ import {
   InputProps,
   ModuleProps,
   ReviewsSummaryProps,
+  ScrollViewProps,
   SelectProps,
   SliderProps,
   TextProps,
   VideoPlayerProps,
 } from "./types";
+import { sizes } from "./utils/Utils";
 
 interface Text extends TextProps {
   id?: string;
@@ -29,7 +31,7 @@ interface Text extends TextProps {
   // numberOfLines?: number;
   align?: "left" | "center" | "right";
   radius?: Radius;
-  action?: Action;
+  action?: Action<Text>;
   margin?: Margin;
   windowSize?: number | "flex";
 }
@@ -44,7 +46,6 @@ interface Button extends ButtonProps {
 interface Input extends InputProps {
   id?: string;
   component: "input";
-  required?: boolean;
   windowSize?: number;
 }
 
@@ -71,7 +72,7 @@ export interface Box extends Omit<AccordionProps, "children"> {
   id?: string;
   component: "box";
   content: ScreenDrawerComponent[];
-  windowSize?: number;
+  windowSize?: number | "flex";
 }
 
 interface Image extends ImageProps {
@@ -107,7 +108,7 @@ interface Row {
 interface Bullet {
   id?: string;
   component: "bullet";
-  size?: keyof typeof config.sizes;
+  size?: keyof typeof sizes;
   color?: string;
   windowSize?: number;
 }
@@ -118,7 +119,7 @@ interface Graph extends GraphProps {
   windowSize?: number;
 }
 
-interface List extends FlatListProps {
+interface List extends FlatListProps<any> {
   id?: string;
   component: "list";
   header?: ScreenDrawerComponent[];
@@ -141,6 +142,12 @@ interface Module extends ModuleProps {
 interface Select extends SelectProps {
   id?: string;
   component: "select";
+  windowSize?: number;
+}
+
+interface ButtonsList extends ButtonsListProps {
+  id?: string;
+  component: "buttonslist";
   windowSize?: number;
 }
 
@@ -187,17 +194,21 @@ export type ScreenDrawerComponent =
   | List
   | Cart
   | Module
-  | Select;
+  | Select
+  | ButtonsList;
 
 export type ScreenDrawerProps = {
   data?: any;
   setData?: any;
   content?: ScreenDrawerComponent[];
   style?: ViewStyle;
-  flatListProps?: FlatListProps;
+  flatListProps?: FlatListProps<any> & { mergeParams?: any };
+  scrollViewProps?: ScrollViewProps
   scrollEnabled?: boolean;
   path?: string;
   onChange?: (details: any) => void;
+  drillProps?: boolean;
+  hasMargin?: boolean;
 };
 
 let test: ScreenDrawerProps["content"] = [

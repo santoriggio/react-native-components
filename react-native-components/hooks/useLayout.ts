@@ -1,123 +1,98 @@
-import { useCallback, useEffect, useMemo } from "react";
-import DeviceInfo from "react-native-device-info";
-import { config } from "../config.default";
-
+import { useEffect, useMemo } from "react";
+import { Dimensions, Platform } from "react-native";
+import config from "../utils/Config";
+import { sizes } from "../utils/Utils";
 import useColorScheme from "./useColorScheme";
 
-const layout: any = {};
+interface LayoutConfig {
+  spacing: number;
+  radius: number;
+  icon_size: number;
+  fontSize: (size?: keyof typeof sizes) => number;
+  Colors: {
+    isDark: boolean;
+    //
+    text: string;
+    card: string;
+    background: string;
+    border: string;
 
-export type Layout = {
-  radius?: number | { phone?: number; tablet: number };
+    light: {
+      text: string;
+      card: string;
+      background: string;
+      border: string;
+    };
+    dark: { text: string; card: string; background: string; border: string };
+
+    //
+    primary: string;
+    secondary: string;
+    success: string;
+    danger: string;
+    notification: string;
+    info: string;
+    link: string;
+    warning: string;
+    gray: string;
+  };
+}
+
+const theme = {
+  light: {
+    isDark: false,
+    text: "#000",
+    card: "#fafafa",
+    background: "#FFFFFF",
+    border: "#e7eaec",
+  },
+  dark: {
+    isDark: true,
+    text: "#fff",
+    card: "#00151c",
+    background: "#001921",
+    border: "#001217",
+  },
 };
 
-export default function useLayout() {
-  const isTablet = DeviceInfo.isTablet();
+const useLayout = (): LayoutConfig => {
   const colorScheme = useColorScheme();
+  const currentConfig = config.getConfig();
 
-  // useEffect(() => {}, [isTablet]);
-
-  const spacing = useMemo(() => {
-    let phone = 12;
-    let tablet = 20;
-
-    if (typeof config.spacing != "undefined") {
-      if (typeof config.spacing == "object") {
-        if (typeof config.spacing.tablet != "undefined") {
-          tablet = config.spacing.tablet;
-        }
-
-        if (typeof config.spacing.phone != "undefined") {
-          phone = config.spacing.phone;
-        }
-      } else {
-        phone = config.spacing;
-      }
-    }
-
-    if (isTablet) return tablet;
-
-    return phone;
-  }, [isTablet]);
-
-  const fontSize = useCallback(
-    (size?: keyof typeof config.sizes) => {
-      let toReturn =
-        typeof size != "undefined" && typeof config.sizes[size] != "undefined" ? config.sizes[size] : config.sizes["m"];
-
-      //@ts-ignore it's ok config.sizes can't be undefined
-      if (isTablet) toReturn = toReturn * 1.5;
-
-      return toReturn;
-    },
-    [isTablet]
-  );
-
-  const radius = useMemo(() => {
-    let phone = 14;
-    let tablet = 20;
-
-    if (typeof layout.radius != "undefined") {
-      if (typeof layout.radius == "object") {
-        if (typeof layout.radius.tablet != "undefined") {
-          tablet = layout.radius.tablet;
-        }
-
-        if (typeof layout.radius.phone != "undefined") {
-          phone = layout.radius.phone;
-        }
-      } else {
-        phone = layout.radius;
-      }
-    }
-
-    if (isTablet) return tablet;
-
-    return phone;
-  }, [isTablet]);
-
-  const icon_size = useMemo(() => {
-    const size = 20;
-    if (isTablet) return size * 1.5;
-
-    return size;
-  }, [isTablet]);
-
-  const Colors = useMemo(() => {
-    const toReturn = {
-      light: {
-        isDark: false,
-        text: "#000",
-        card: "#fafafa",
-        background: "#FFFFFF",
-        border: "#e7eaec",
-      },
-      dark: {
-        isDark: true,
-        text: "#fff",
-        card: "#00151c",
-        background: "#001921",
-        border: "#001217",
-      },
-    };
-
-    let basic = {
-      primary: "#1ab394",
-      secondary: "#00151c",
-      success: "#4cd964",
-      danger: "#FF3B30",
-      notification: "rgb(255, 69, 58)",
-      info: "#0A84FF",
-      link: "#0000EE",
-      warning: "#ffcc00",
-      gray: "#888",
-    };
+  const layoutConfig = useMemo<LayoutConfig>(() => {
+    const { width, height } = Dimensions.get("window");
+    const isTablet = width > 600 && height > 600;
+    const currentTheme = theme[colorScheme];
 
     return {
-      ...toReturn[colorScheme],
-      ...toReturn,
-      ...basic,
-    };
-  }, [colorScheme]);
+      spacing: isTablet ? 20 : currentConfig.spacing,
+      radius: isTablet ? 16 : currentConfig.radius,
+      icon_size: isTablet ? 30 : 20,
+      fontSize: (size?: keyof typeof sizes) => {
+        if (typeof size != "undefined" && typeof sizes[size] != "undefined") {
+          return sizes[size];
+        }
 
-  return { spacing, radius, icon_size, fontSize, Colors };
-}
+        return sizes["m"];
+      },
+      Colors: {
+        ...currentTheme,
+        light: theme["light"],
+        dark: theme["dark"],
+        primary: "#1ab394",
+        secondary: "#00151c",
+        success: "#4cd964",
+        danger: "#FF3B30",
+        notification: "rgb(255, 69, 58)",
+        info: "#0A84FF",
+        link: "#0000EE",
+        warning: "#ffcc00",
+        gray: "#888",
+      },
+    };
+  }, [JSON.stringify(currentConfig), colorScheme]);
+
+  return layoutConfig;
+};
+
+export default useLayout;

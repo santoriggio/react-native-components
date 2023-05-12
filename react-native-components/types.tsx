@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { MutableRefObject, ReactNode } from "react";
 import {
   FlatListProps as DefaultFlatListProps,
   FlatList as DefaultFlatList,
@@ -16,74 +16,93 @@ import Animated from "react-native-reanimated";
 import SkeletonPlaceholder from "./components/SkeletonPlaceholder";
 import { ScreenDrawerComponent } from "./ScreenDrawerTypes";
 import { ImageProps as DefaultImageProps } from "expo-image";
-import { config } from "./config.default";
+import { sizes } from "./utils/Utils";
 
 /*
 
-{
-  type:'api',
-  endpoint,
-  params,
-  callback:{
-  type: 'listener',
-  event: 'onChange',
-  params: {
-  refresh:{
-  
-    manage_customers:true
-  
-  }
-  }
-  }
-}
+
 
 */
 
-export interface FlatListProps
-  extends Partial<
-    DefaultFlatListProps<{
-      content: ScreenDrawerComponent[];
-    }>
-  > {
-  data?:
-    | {
-        title?: string;
-        content: ScreenDrawerComponent[];
-      }[]
-    | any[];
+type CustomFlatListProps = {
+  ref?: MutableRefObject<DefaultFlatList<any>>;
   endpoint?: string;
   query?: string;
-  params?: any;
-  limit?: number;
+  params?: {
+    [key: string]: any;
+  };
   structure?: string;
   path?: string;
+  scrollY?: any;
+  scrollX?: any;
+  skeletonPlaceholder?: SkeletonPlaceholderProps["components"];
+  unread?: (string | number)[];
   handleErrors?: {
     [key: string]: {
       title?: string;
       message?: string;
     };
   };
-  canRefresh?: boolean;
+  selected?: any[];
+  keysPath?: {
+    path: string;
+    onKeyFound: (data: any) => void;
+  }[];
+
+  onLoadEnd?: () => void;
+
+  onPressItem?: (item: any) => void;
+  onLongPressItem?: (item: any) => void;
   enableDebugLogs?: boolean;
-  skeletonPlaceholder?: SkeletonPlaceholder;
-  scrollY?: any;
-  scrollX?: any;
+};
 
-  // Default Flatlist Props
+export type FlatListProps<T> = CustomFlatListProps & Partial<DefaultFlatListProps<T>>;
 
-  // renderItem?: ListRenderItem<any>;
-  // data?: any[];
-  // numColumns?: number;
-  // bounces?: boolean;
-  // horizontal?: boolean;
-  // contentContainerStyle?: ViewStyle;
-  // scrollEnabled?: boolean;
-  // scrollIndicatorInsets?: Insets;
-  // onEndReached?: () => void;
-  // onEndReachedThreshold?: any;
-  // refreshing?: boolean;
-  // onRefresh?: () => void;
-}
+// export interface FlatListProps
+//   extends Partial<
+//     DefaultFlatListProps<{
+//       content: ScreenDrawerComponent[];
+//     }>
+//   > {
+//   data?:
+//     | {
+//         title?: string;
+//         content: ScreenDrawerComponent[];
+//       }[]
+//     | any[];
+//   endpoint?: string;
+//   query?: string;
+//   params?: any;
+//   limit?: number;
+//   structure?: string;
+//   path?: string;
+//   handleErrors?: {
+//     [key: string]: {
+//       title?: string;
+//       message?: string;
+//     };
+//   };
+//   canRefresh?: boolean;
+//   enableDebugLogs?: boolean;
+//   skeletonPlaceholder?: SkeletonPlaceholder;
+//   scrollY?: any;
+//   scrollX?: any;
+
+//   // Default Flatlist Props
+
+//   // renderItem?: ListRenderItem<any>;
+//   // data?: any[];
+//   // numColumns?: number;
+//   // bounces?: boolean;
+//   // horizontal?: boolean;
+//   // contentContainerStyle?: ViewStyle;
+//   // scrollEnabled?: boolean;
+//   // scrollIndicatorInsets?: Insets;
+//   // onEndReached?: () => void;
+//   // onEndReachedThreshold?: any;
+//   // refreshing?: boolean;
+//   // onRefresh?: () => void;
+// }
 
 export interface FlatListMethods extends Animated.FlatList<any> {}
 
@@ -110,7 +129,7 @@ export type CartProps = {
 };
 
 export interface TextProps extends DefaultTextProps {
-  size?: keyof typeof config.sizes;
+  size?: keyof typeof sizes;
   bold?: boolean;
 }
 
@@ -123,18 +142,19 @@ export const ButtonTypes = {
 
 export type ButtonProps = {
   title?: string;
-  onPress?: () => void;
+
   icon?: string;
   type?: keyof typeof ButtonTypes;
   role?: "primary" | "danger" | "info" | "warning" | "success";
   style?: ViewStyle;
   active?: boolean;
   loading?: boolean;
-  size?: keyof typeof config.sizes;
+  size?: keyof typeof sizes;
   textStyle?: TextStyle;
   iconStyle?: TextStyle;
   activeOpacity?: number;
-  action?: Action;
+  action?: Action<ButtonProps>;
+  onLongPressAction?: Action<ButtonProps>;
 };
 
 export type CheckboxProps = {
@@ -216,14 +236,14 @@ export interface InputProps {
     | "html";
 
   link?: string;
-  size?: keyof typeof config.sizes;
-  required?: boolean;
+  size?: keyof typeof sizes;
+  required?: boolean | 0 | 1;
   value?: any;
   onChange?: (newValue: any) => void;
   box_id?: string;
   trigger?: {
     value?: any; // string, boolean, number, *maybe objects
-    target: string | string[]; //Or object
+    target: string | string[]; //Or object {}
   };
 }
 
@@ -240,7 +260,7 @@ export interface ScrollViewProps extends DefaultScrollViewProps {
 }
 
 export interface TextInputProps extends DefaultTextInputProps {
-  size?: keyof typeof config.sizes;
+  size?: keyof typeof sizes;
   bold?: boolean;
 }
 
@@ -301,7 +321,7 @@ export type SelectProps = {
    * @default 'select'
    */
 
-  type?: "select" | "multiselect";
+  type?: "select" | "multiselect" | "state"
 
   /**
    * The keys of the selected item
@@ -319,11 +339,28 @@ export type SelectProps = {
 
 export type ModuleProps = {
   module?: string;
+  title?: string;
+  placeholder?: string;
+  required?: boolean | 1 | 0;
+  limit?: number;
+  icon?: string;
+};
+
+export type SkeletonPlaceholderComponent = {
+  height?: number;
+  radius?: number;
+  quantity?: number;
+  size?: number;
+};
+
+export type SkeletonPlaceholderProps = {
+  style?: ViewStyle;
+  components: SkeletonPlaceholderComponent[];
 };
 
 export type LoadingProps = {
   style?: ViewStyle;
-  skeletonPlaceholder?: SkeletonPlaceholder["components"];
+  skeletonPlaceholder?: SkeletonPlaceholderProps["components"];
 };
 
 export type MessageProps = {};
@@ -334,7 +371,7 @@ export type AccordionProps = {
   children: ReactNode;
   header?: ReactNode;
   title: string;
-  size?: keyof typeof config.sizes;
+  size?: keyof typeof sizes;
   bold?: boolean;
   color?: string;
   icon?: string;
@@ -348,7 +385,7 @@ type ButtonsListSwitch = {
   onChange: (e: SwitchChangeEvent) => void;
 };
 
-type ButtonsListButtonProps = {
+export type ButtonsListButtonProps = {
   title?: string;
   subtitle?: string;
   /**
@@ -378,7 +415,8 @@ type ButtonsListButtonProps = {
    */
 
   backgroundColor?: ColorValue;
-  onPress?: () => void;
+  action?: Action<ButtonsListButtonProps>;
+  onLongPressAction?: Action<ButtonsListButtonProps>;
 
   /**
    * Render a component instead the chevron icon on the right
@@ -401,7 +439,7 @@ type ButtonsListButtonProps = {
    *
    */
 
-  component?: ((buttonInfo: ButtonsListButtonProps) => JSX.Element) | ButtonsListSwitch;
+  component?: ((button: ButtonsListButtonProps) => JSX.Element | undefined | null) | ButtonsListSwitch;
 };
 
 export type ButtonsListProps = {
@@ -423,11 +461,18 @@ export type ButtonsListProps = {
 
 export type GraphProps = {
   datasets: {
+    /**
+     * @default Colors.primary
+     */
     backgroundColor?: string;
-    data?: any[];
+    borderColor?: string;
+    pointBackgroundColor?: string;
+    data?: number[];
   }[];
   labels: string[];
-  action?: Action;
+  action?: Action<GraphProps>;
+  onLongPressAction?: Action<GraphProps>;
+  style?: ViewStyle;
 };
 
 export type LinkAction = {
@@ -442,7 +487,7 @@ export type ApiAction = {
 
   params?: any;
 
-  callback?: Action;
+  callback?: Action<any>;
 };
 
 export type PopupAction = {
@@ -465,7 +510,7 @@ export type PickerAction = {
   type: "picker";
   picker: "flag" | "search"; // flag, module, module_id cart type ['buyable', 'coupon']
   content: ScreenDrawerComponent[];
-  callback?: Action;
+  callback?: Action<any>;
 };
 
-export type Action = (() => void) | LinkAction | ApiAction | PopupAction | PressAction | ListenerAction | PickerAction;
+export type Action<T> = ((details?: T) => void) | LinkAction | ApiAction | PopupAction | ListenerAction | PickerAction;

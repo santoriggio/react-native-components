@@ -78,13 +78,13 @@ const PhoneInput: FC<IProps> = ({ value, size, onChange, input_container_style }
       }}
     >
       <TouchableOpacity
-        style={{ paddingHorizontal: spacing }}
+        style={{ paddingHorizontal: spacing,paddingRight:0 }}
         hitSlop={{
           bottom: spacing,
           top: spacing,
         }}
         onPress={() => {
-          FlagPickerController.showModal({
+          FlagPickerController.show({
             onSuccess: (result: any) => {
               setActualFlag((prevFlag: any) => {
                 setPhoneText((prevPhoneText) => {

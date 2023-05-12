@@ -8,6 +8,7 @@ import { CartProps } from "../types";
 import AppSettings from "../utils/AppSettings";
 import FlatList from "./FlatList";
 import ScreenDrawer from "./ScreenDrawer";
+import { SearchPickerController } from "./SearchPicker";
 
 /**
  *
@@ -26,10 +27,20 @@ function Cart({ ...props }: CartProps) {
 
   useEffect(() => {
     const listener = AppSettings.addListener(`onChange/${props.uniqueId}`, (event: any) => {
-      console.log(event);
       if (event.event == "add") {
+        SearchPickerController.hide();
+
         return prepare([...raw_data, event.item]);
       }
+
+      if (event.event == "set") {
+        const index = raw_data.findIndex((x) => x.id != event.item.id || x.type != event.item.type)
+        let toReturn = raw_data
+        toReturn[index] = event.item
+        return prepare(toReturn)
+
+      }
+
       if (event.event == "remove") {
         return prepare(raw_data.filter((x) => x.id != event.item.id || x.type != event.item.type));
       }
@@ -43,18 +54,28 @@ function Cart({ ...props }: CartProps) {
   }, []);
 
   const prepare = async (newCart: any) => {
+
+
+
+
     const apiResult = await sendApiRequest("/cart/prepare", { uniqueId: props.uniqueId, cart: newCart });
+
+    console.log(apiResult)
 
     if (typeof apiResult.error != "undefined") {
       return;
     }
 
-    if (typeof apiResult.header != "undefined") {
-      setHeader(apiResult.header);
+    if (typeof apiResult.data.header != "undefined") {
+      setHeader(apiResult.data.header);
     }
 
-    set_raw_data(apiResult.data);
-    return setCart(apiResult.content);
+
+
+    console.log(apiResult.data.content)
+
+    set_raw_data(apiResult.data.data);
+    return setCart(apiResult.data.content);
   };
 
   return <FlatList data={cart} ListHeaderComponent={<ScreenDrawer content={header} />} />;

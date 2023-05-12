@@ -1,24 +1,30 @@
 import { MessageController } from "../components/Message";
-import { Action, ApiAction, ListenerAction, PickerAction } from "../types";
+import { Action, ApiAction, ListenerAction, PickerAction, PopupAction } from "../types";
 import keyExist from "./keyExist";
 import sendApiRequest from "./sendApiRequest";
 import * as Linking from "expo-linking";
 import AppSettings from "../utils/AppSettings";
 import { FlagPickerController } from "../components/FlagPicker";
+import { BottomSheetController } from "../components/BottomSheet";
+import { SearchPickerController } from "../components/SearchPicker";
+import deepMerge from "./deepMerge";
 
 /**
  *
  * trigger Action function help to trigger the action of this library
  *
- * //TODO: Add all the actions
+ * //TODO: Aggiungere i trigger dei picker
+ *
  *
  */
 
-async function triggerAction(action: Action) {
+async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
   if (typeof action != "undefined") {
     if (typeof action == "function") {
-      return action();
+      return action(details);
     }
+
+
 
     switch (action.type) {
       case "api":
@@ -26,25 +32,42 @@ async function triggerAction(action: Action) {
         const params = keyExist<ApiAction["params"]>(action.params, "isObject");
 
         if (typeof endpoint != "undefined") {
-          const apiResult = await sendApiRequest(endpoint, params);
+          let merged = params
+          if(typeof action.mergeData != 'undefined'&&action.mergeData ==true){
+            merged =  deepMerge({ data: SearchPickerController.getData() }, params);
+          }
 
-          console.log(apiResult);
+          const apiResult = await sendApiRequest(endpoint, merged);
+
+
 
           if (typeof apiResult.error != "undefined") {
+            //TODO:
+            const message = apiResult.message;
+
             MessageController.show({
               type: "alert",
               title: "Ops",
-              message: "Si è verificato un errore",
+              message: typeof message != "undefined" && message  != '' ? message.message : "Si è verificato un errore",
             });
             return;
           }
 
-          const callback = keyExist<ApiAction["callback"]>(action.callback, "isObject");
+          const apiAction = keyExist<ApiAction["callback"]>(apiResult.data.action, "isObject");
 
-          if (typeof callback != "undefined") {
-            //callback exist
-            triggerAction(callback);
+          if (typeof apiAction != "undefined") {
+            if (Array.isArray(apiAction)) {
+              //array
+              apiAction.forEach((act) => triggerAction(act));
+            } else {
+              triggerAction(apiAction);
+            }
           }
+
+          // if (typeof callback != "undefined") {
+          //   //callback exist
+          //   triggerAction(callback);
+          // }
         }
         break;
       case "link":
@@ -70,23 +93,35 @@ async function triggerAction(action: Action) {
       case "picker":
         const picker = keyExist<PickerAction["picker"]>(action.picker, "isString");
 
-        if(typeof picker != 'undefined'){
-            if(picker == 'flag'){
-                const callback = keyExist<ApiAction["callback"]>(action.callback, "isObject");
+        if (typeof picker != "undefined") {
+          if (picker == "flag") {
+            FlagPickerController.show({
+              content: [],
+            });
+          }
+          if (picker == "search") {
+            console.log(action.data);
+            SearchPickerController.show({
+              //@ts-ignore
+              data: action.data,
+              footer: action.footer,
+              content: action.content,
+            });
+          }
+        }
+        break;
+      case "popup":
+        const content = keyExist<PopupAction["content"]>(action.content, "isArray");
+        if (typeof content != "undefined") BottomSheetController.show(content);
 
-                if (typeof callback != "undefined") {
-                  //callback exist
-                  triggerAction(callback);
-                }
-               
-                FlagPickerController.showModal({
-
-                })
-
-
-            }
+        if (Object.keys(action).length == 1 && typeof content == "undefined") {
+          BottomSheetController.hide();
         }
 
+        break;
+      case "message":
+        MessageController.show(action.message);
+        break;
     }
   }
 }

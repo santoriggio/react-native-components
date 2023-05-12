@@ -24,15 +24,18 @@ import AppSettings from "../utils/AppSettings";
 import Module from "./Module";
 import { Ionicons } from "@expo/vector-icons";
 import Select from "./Select";
+import triggerAction from "../functions/triggerAction";
+import ButtonsList from "./ButtonsList";
+import Bullet from "./Bullet";
+
 /**
  *
- * bagde: {
- * }
+ *
  *
  */
 
 interface I {
-  shouldRender?: boolean;
+  data?: any;
   style?: (component: ScreenDrawerComponent) => void;
   component: ScreenDrawerComponent;
   box_id?: string;
@@ -186,46 +189,14 @@ const RenderComponent = memo(({ component, ...props }: I) => {
         <TouchableOpacity
           disabled={typeof component.action != "undefined" ? false : true}
           activeOpacity={typeof component.action != "undefined" ? 0.5 : 1}
-          onPress={async () => {
-            const fAction = keyExist<ButtonProps["action"]>(component.action);
-
-            if (typeof fAction != "undefined") {
-              if (typeof fAction.type != "undefined") {
-                if (fAction.type == "link") {
-                  const fLink = keyExist<string>(fAction.link);
-
-                  if (typeof fLink != "undefined") {
-                    return Linking.openURL(fLink);
-                  }
-                }
-
-                if (fAction.type == "api") {
-                  const fEndpoint = keyExist<string>(fAction.endpoint);
-                  const fParams = keyExist<any>(fAction.params);
-
-                  if (typeof fEndpoint != "undefined") {
-                    // setLoadingState(true);
-
-                    const apiResult = await sendApiRequest(fEndpoint, fParams);
-
-                    //setLoadingState(false);
-
-                    if (typeof apiResult.error != "undefined") {
-                      console.error("Ops", JSON.stringify(apiResult.error));
-                      return;
-                    }
-                  }
-                }
-
-                if (fAction.type == "press") {
-                  return fAction.onPress();
-                }
-
-                if (fAction.type == "listener") {
-                  return AppSettings.emitListener(fAction.event, fAction.params);
-                }
-              }
-            }
+          onPress={() => {
+            triggerAction(component.action);
+          }}
+          hitSlop={{
+            bottom: spacing,
+            left: spacing,
+            top: spacing,
+            right: spacing,
           }}
           style={{
             flexDirection: "row",
@@ -241,7 +212,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
             <Icon
               family="Feather"
               name={component.icon}
-              color={filled ? "white" : component.color}
+              color={textColor == "light" ? Colors.gray : filled == true ? "white" : textColor}
               style={{ width: icon_size, textAlign: "center", marginRight: spacing }}
             />
           )}
@@ -263,7 +234,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                 size={component.size}
                 style={[
                   {
-                    color: textColor == "light" ? Colors.gray : filled ? "white" : textColor,
+                    color: textColor == "light" ? Colors.gray : filled == true ? "white" : textColor,
                   },
                   component.style,
                 ]}
@@ -280,11 +251,10 @@ const RenderComponent = memo(({ component, ...props }: I) => {
         </TouchableOpacity>
       );
     case "image":
-      const height = typeof component.height != "undefined" ? component.height : undefined;
+      //const height = typeof component.height != "undefined" ? component.height : undefined;
       return (
         <Image
           {...component}
-          source={component.value}
           style={{
             width: typeof component.type != "undefined" && component.type == "avatar" ? spacing * 6 : "100%",
             height: typeof component.type != "undefined" && component.type == "avatar" ? spacing * 6 : undefined,
@@ -296,24 +266,11 @@ const RenderComponent = memo(({ component, ...props }: I) => {
     case "video":
       return <VideoPlayer {...component} />;
     case "bullet":
-      return (
-        <View
-          style={{
-            width: fontSize(component.size) * 0.8,
-            aspectRatio: 1,
-            borderRadius: 100,
-            backgroundColor: component.color,
-            //margin: spacing * 0.5,
-            // marginLeft: isRow == false || (isRow && isFirst) ? undefined : spacing * 0.5,
-            // marginRight: isRow == false || (isRow && isLast) ? undefined : spacing * 0.5,
-          }}
-        />
-      );
+      return <Bullet {...component} />;
     case "row":
       return (
         <View
           style={{
-            //  borderRadius: radius,
             flexDirection: "row",
             alignItems: "flex-start",
             ...customStyle,
@@ -367,21 +324,87 @@ const RenderComponent = memo(({ component, ...props }: I) => {
     case "graph":
       return <Graph {...component} />;
     case "modulepicker":
-      return <Module {...component} />;
+      return <Module value={props.value} onChange={handleChange} {...component} />;
     case "select":
-      return <Select selected={props.value} {...component} />;
+      return <Select {...component} selected={props.value} onChange={handleChange} />;
+    case "buttonslist":
+      return <ButtonsList {...component} />;
     default:
       return null;
   }
 });
 
-function ScreenDrawer({ ...props }: ScreenDrawerProps) {
+function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: ScreenDrawerProps) {
   const { spacing, Colors, radius, fontSize } = useLayout();
-  const [filterComponent, setFilterComponent] = useState<string[]>([]);
+  const [hiddenComponents, setHiddenComponents] = useState<string[]>([]);
 
   useEffect(() => {
     checkIfCanContinue();
   }, [JSON.stringify(props.data), JSON.stringify(props.content)]);
+
+  const onChange = useCallback(
+    (component: ScreenDrawerComponent, newValue: any, box_id?: string) => {
+      let path = "";
+
+      if (typeof component.id != "undefined") {
+        path = component.id;
+
+        if (typeof box_id != "undefined") {
+          path = `${box_id}/${component.id}/`;
+        }
+      }
+
+      if (typeof props.path != "undefined" && props.path != "") {
+        path = props.path + "/" + path;
+      }
+
+      if (path != "" && typeof props.setData != "undefined") {
+        props.setData((prevState: any) => {
+          const paths = path
+            .toString()
+            .split("/")
+            .filter((x) => x != "");
+          let toReturn: any = { ...prevState };
+
+          paths.reduce((parent, path, k, array) => {
+            if (k === array.length - 1) {
+              parent[path] = newValue;
+            } else if (typeof parent[path] != "object") {
+              parent[path] = {};
+            }
+            return parent[path];
+          }, toReturn);
+
+          return { ...prevState, ...toReturn };
+        });
+      }
+
+      //@ts-ignore the control exist in the function "triggerComponent"
+      triggerComponent(component.trigger, newValue, box_id);
+    },
+    [JSON.stringify(props.path)]
+  );
+
+  const shouldRender = useCallback(
+    (component: any, box_id?: string) => {
+      let toReturn = true;
+      if (typeof hiddenComponents != "undefined" && Array.isArray(hiddenComponents)) {
+        let path = "";
+        if (typeof component.id != "undefined") {
+          path = component.id;
+        }
+
+        if (typeof box_id != "undefined") {
+          path = `${box_id}/${component.id}`;
+        }
+
+        if (hiddenComponents.includes(path)) toReturn = false;
+      }
+
+      return toReturn;
+    },
+    [JSON.stringify(hiddenComponents)]
+  );
 
   const checkIfCanContinue = () => {
     if (typeof props.content == "undefined" || typeof props.data == "undefined") return;
@@ -406,14 +429,11 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
     return props.onChange({ canContinue });
   };
 
-  const triggerComponent = (trigger: any, newValue: any, box?: Box) => {
-    return;
-
+  const triggerComponent = (trigger: any, newValue: any, box_id?: string) => {
     if (typeof trigger != "undefined") {
       if (typeof trigger.target == "string") {
-        setFilterComponent((prevState) => {
-          let path =
-            typeof box != "undefined" && typeof box.id != "undefined" ? `${box.id}/${trigger.target}` : trigger.target;
+        setHiddenComponents((prevState) => {
+          let path = typeof box_id != "undefined" ? `${box_id}/${trigger.target}` : trigger.target;
 
           if (typeof trigger.value != "undefined") {
             if (trigger.value == newValue) {
@@ -436,14 +456,14 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
       }
 
       if (Array.isArray(trigger.target) && trigger.target.length > 0) {
-        setFilterComponent((prevState) => {
+        setHiddenComponents((prevState) => {
           let toReturn = prevState;
 
           trigger.target.forEach((trg: string) => {
-            let path = typeof box != "undefined" && typeof box.id != "undefined" ? `${box.id}/${trg}` : trg;
+            let path = typeof box_id != "undefined" ? `${box_id}/${trg}` : trg;
 
             if (prevState.includes(path)) {
-              toReturn.filter((x) => x != path);
+              toReturn = toReturn.filter((x) => x != path);
             } else {
               toReturn.push(path);
             }
@@ -475,46 +495,6 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
     }
   };
 
-  const onChange = useCallback(
-    (component: ScreenDrawerComponent, newValue: any, box_id?: string) => {
-      let path = "";
-
-      if (typeof component.id != "undefined") {
-        path = component.id;
-
-        if (typeof box_id != "undefined") {
-          path = `${box_id}/${component.id}/`;
-        }
-      }
-
-      if (typeof props.path != "undefined" && props.path != "") {
-        path = props.path + "/" + path;
-      }
-
-      if (path != "" && typeof props.setData != "undefined") {
-        props.setData((prevState: any) => {
-          const paths = path.split("/").filter((x) => x != "");
-          let toReturn: any = { ...prevState };
-
-          paths.reduce((parent, path, k, array) => {
-            if (k === array.length - 1) {
-              parent[path] = newValue;
-            } else if (typeof parent[path] != "object") {
-              parent[path] = {};
-            }
-            return parent[path];
-          }, toReturn);
-
-          return { ...prevState, ...toReturn };
-        });
-      }
-
-      //@ts-ignore the control exist in the function "triggerComponent"
-      triggerComponent(component.trigger, newValue);
-    },
-    [JSON.stringify(props.path)]
-  );
-
   if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "list") {
     return (
       <FlatList
@@ -535,14 +515,17 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
   }
 
   return (
-    <ScrollView scrollEnabled={props.scrollEnabled}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", padding: spacing / 2, ...props.style }}>
+    <ScrollView scrollEnabled={props.scrollEnabled} {...props.scrollViewProps}>
+      <View
+        style={{ flexDirection: "row", flexWrap: "wrap", padding: hasMargin ? spacing / 2 : undefined, ...props.style }}
+      >
         {typeof props.content != "undefined" &&
           props.content.length > 0 &&
           Array.isArray(props.content) &&
           props.content.map((component, index) => {
             const data = typeof props.data != "undefined" ? props.data : {};
-            if (component.component == "box") {
+
+            if (shouldRender(component) && component.component == "box") {
               const box_data =
                 typeof component.id != "undefined" && typeof data[component.id] != "undefined"
                   ? data[component.id]
@@ -554,34 +537,50 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
                   bold
                   size="xl"
                   {...component}
-                  style={{ marginHorizontal: spacing * 0.5, marginBottom: spacing }}
+                  style={{
+                    // flex: typeof component.windowSize != "undefined" && component.windowSize == "flex" ? 1 : undefined,
+                    marginHorizontal: spacing * 0.5,
+                    marginBottom: spacing,
+                  }}
                 >
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", padding: spacing / 2 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      padding: spacing / 2,
+                    }}
+                  >
                     {component.content.length > 0 &&
                       component.content.map((box_component, box_index) => {
-                        const value =
-                          typeof box_component.id != "undefined" && typeof box_data[box_component.id] != "undefined"
-                            ? box_data[box_component.id]
-                            : undefined;
+                        if (shouldRender(box_component, component.id)) {
+                          const value =
+                            typeof box_component.id != "undefined" && typeof box_data[box_component.id] != "undefined"
+                              ? box_data[box_component.id]
+                              : undefined;
 
-                        return (
-                          <View
-                            key={box_index}
-                            style={{
-                              width:
-                                (typeof box_component.windowSize !== "undefined" ? box_component.windowSize : 100) +
-                                "%",
-                              padding: spacing / 2,
-                            }}
-                          >
-                            <RenderComponent
-                              value={value}
-                              component={box_component}
-                              onChange={onChange}
-                              box_id={component.id}
-                            />
-                          </View>
-                        );
+                          return (
+                            <View
+                              key={box_index}
+                              style={{
+                                width:
+                                  (typeof box_component.windowSize !== "undefined" ? box_component.windowSize : 100) +
+                                  "%",
+                                padding: spacing / 2,
+                              }}
+                            >
+                              <RenderComponent
+                                // data={drillProps ? props.data : undefined}
+                                value={value}
+                                component={box_component}
+                                onChange={onChange}
+                                box_id={component.id}
+                                parent={component}
+                              />
+                            </View>
+                          );
+                        }
+
+                        return null;
                       })}
                   </View>
                 </Accordion>
@@ -592,17 +591,27 @@ function ScreenDrawer({ ...props }: ScreenDrawerProps) {
                 ? data[component.id]
                 : undefined;
 
-            return (
-              <View
-                key={index}
-                style={{
-                  width: (typeof component.windowSize !== "undefined" ? component.windowSize : 100) + "%",
-                  padding: spacing / 2,
-                }}
-              >
-                <RenderComponent value={value} component={component} onChange={onChange} />
-              </View>
-            );
+            if (shouldRender(component)) {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    width: (typeof component.windowSize !== "undefined" ? component.windowSize : 100) + "%",
+                    padding: hasMargin ? spacing / 2 : undefined,
+                    marginBottom: hasMargin ? spacing * 0.5 : undefined,
+                  }}
+                >
+                  <RenderComponent
+                    // data={drillProps ? props.data : undefined}
+                    value={value}
+                    component={component}
+                    onChange={onChange}
+                  />
+                </View>
+              );
+            }
+
+            return null;
           })}
       </View>
     </ScrollView>

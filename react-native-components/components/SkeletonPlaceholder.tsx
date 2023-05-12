@@ -11,20 +11,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 import useLayout from "../hooks/useLayout";
+import { SkeletonPlaceholderComponent, SkeletonPlaceholderProps } from "../types";
 
-type Component = {
-  height?: number;
-  radius?: number;
-  quantity?: number;
-  size?: number;
-};
-
-declare interface SkeletonPlaceholder {
-  style?: ViewStyle;
-  components: Component[];
-}
-
-function SkeletonPlaceholder({ ...props }: SkeletonPlaceholder) {
+function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
   const { spacing, icon_size, radius, Colors } = useLayout();
   const animatedValue = useSharedValue(0);
 
@@ -32,7 +21,7 @@ function SkeletonPlaceholder({ ...props }: SkeletonPlaceholder) {
     startAnimation();
   }, []);
 
-  const customStyle = (component: Component) => {
+  const customStyle = (component: SkeletonPlaceholderComponent) => {
     let toReturn: ViewStyle = {};
 
     if (typeof component.height != "undefined" && component.height >= 0) {

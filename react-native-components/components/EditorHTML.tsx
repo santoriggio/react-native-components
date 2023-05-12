@@ -1,4 +1,3 @@
-
 import React, {
   FC,
   forwardRef,
@@ -86,7 +85,7 @@ function EditorHTML({ ...props }: any) {
   const onPressAddImage = useCallback(() => {
     // insert URL
 
-    alert("ciao");
+
 
     richText.current?.insertImage(
       "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/100px-React-icon.svg.png"
@@ -126,12 +125,9 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
-            richText.current?.setFontSize(key);
-          },
+        action: () => {
+          setSettingsVisible(false);
+          richText.current?.setFontSize(key);
         },
       };
 
@@ -147,7 +143,6 @@ function EditorHTML({ ...props }: any) {
       <TouchableOpacity
         onPress={() => {
           if (typeof options.onSuccess != "undefined") {
-            console.log("sono qui", contentHtml);
             options.onSuccess(contentHtml);
           }
 
@@ -164,7 +159,7 @@ function EditorHTML({ ...props }: any) {
   }, [contentHtml, JSON.stringify(options)]);
 
   const add = useCallback(() => {
-    alert("ciao");
+    // alert("ciao");
   }, []);
 
   const all = () => {
@@ -185,12 +180,9 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
-            richText.current?.sendAction(actions.setBold, "result");
-          },
+        action: () => {
+          setSettingsVisible(false);
+          richText.current?.sendAction(actions.setBold, "result");
         },
       },
       {
@@ -203,12 +195,9 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
-            richText.current?.sendAction(actions.setItalic, "result");
-          },
+        action: () => {
+          setSettingsVisible(false);
+          richText.current?.sendAction(actions.setItalic, "result");
         },
       },
       {
@@ -221,15 +210,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            // richText.current?.sendAction(actions.setItalic, "result");
-          },
+          // richText.current?.sendAction(actions.setItalic, "result");
         },
       },
       // {
@@ -260,15 +246,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.alignLeft, "result");
-          },
+          richText.current?.sendAction(actions.alignLeft, "result");
         },
       },
       {
@@ -281,15 +264,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.alignCenter, "result");
-          },
+          richText.current?.sendAction(actions.alignCenter, "result");
         },
       },
       {
@@ -302,15 +282,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.alignRight, "result");
-          },
+          richText.current?.sendAction(actions.alignRight, "result");
         },
       },
       {
@@ -323,15 +300,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.insertBulletsList, "result");
-          },
+          richText.current?.sendAction(actions.insertBulletsList, "result");
         },
       },
       {
@@ -344,15 +318,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.insertOrderedList, "result");
-          },
+          richText.current?.sendAction(actions.insertOrderedList, "result");
         },
       },
       {
@@ -365,15 +336,12 @@ function EditorHTML({ ...props }: any) {
           top: 1,
           left: 1,
         },
-        action: {
-          type: "press",
-          onPress: () => {
-            setSettingsVisible(false);
+        action: () => {
+          setSettingsVisible(false);
 
-            // insertImage
+          // insertImage
 
-            richText.current?.sendAction(actions.code, "result");
-          },
+          richText.current?.sendAction(actions.code, "result");
         },
       },
       // {

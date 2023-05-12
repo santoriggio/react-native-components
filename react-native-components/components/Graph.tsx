@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import keyExist from "../functions/keyExist";
+import triggerAction from "../functions/triggerAction";
 import useLayout from "../hooks/useLayout";
 import { GraphProps } from "../types";
 import Text from "./Text";
 
-function Graph({ ...props }: GraphProps) {
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+function Graph(props: GraphProps) {
   const { spacing, icon_size, radius, Colors } = useLayout();
+
   const graphHeight = spacing * 20;
   const { width } = useWindowDimensions();
   const [canvasWidth, setCanvasWidth] = useState<number>(0);
@@ -87,6 +91,7 @@ function Graph({ ...props }: GraphProps) {
               color: typeof color != "undefined" ? color : Colors.primary,
               value: columnMonth,
             };
+
             if (typeof result[columnMonth_id] !== "undefined") {
               result[columnMonth_id].push(obj);
             } else {
@@ -100,8 +105,24 @@ function Graph({ ...props }: GraphProps) {
     return result;
   }, [JSON.stringify(datasets)]);
 
+  const onPress = () => {
+    if (typeof props.action != "undefined") {
+      return triggerAction<Omit<GraphProps, "onPress">>(props.action, props);
+    }
+  };
+
+  const onLongPress = () => {
+    if (typeof props.onLongPressAction != "undefined") {
+      return triggerAction<Omit<GraphProps, "onPress">>(props.onLongPressAction, props);
+    }
+  };
+
   return (
-    <Animated.View
+    <AnimatedTouchableOpacity
+      onPress={onPress}
+      onLongPress={onLongPress}
+      activeOpacity={0.5}
+      disabled={typeof props.action == "undefined"}
       entering={FadeIn}
       style={{
         paddingTop: spacing,
@@ -111,6 +132,7 @@ function Graph({ ...props }: GraphProps) {
         flexDirection: "row",
         borderWidth: 1,
         overflow: "hidden",
+        ...props.style,
       }}
     >
       <View style={{ overflow: "hidden", borderRadius: radius, flex: 1, backgroundColor: "transparent" }}>
@@ -233,7 +255,7 @@ function Graph({ ...props }: GraphProps) {
           })}
         </View>
       </View>
-    </Animated.View>
+    </AnimatedTouchableOpacity>
   );
 }
 

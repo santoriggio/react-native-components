@@ -5,3 +5,5 @@ android/
 ios/
 App.tsx
 app.json
+package-lock.json
+tsconfig.json

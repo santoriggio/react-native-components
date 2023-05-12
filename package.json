@@ -1,6 +1,6 @@
 {
   "name": "@santoriggio/react-native-components",
-  "version": "1.0.13",
+  "version": "1.0.29",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
@@ -29,6 +29,7 @@
     "react-native-device-info": "^10.6.0",
     "react-native-gesture-handler": "~2.9.0",
     "react-native-google-places-autocomplete": "^2.5.1",
+    "react-native-image-picker": "^5.3.1",
     "react-native-mmkv": "^2.5.1",
     "react-native-pell-rich-editor": "^1.9.0",
     "react-native-reanimated": "~2.14.4",
@@ -42,7 +43,7 @@
     "@types/react": "~18.0.14",
     "typescript": "^4.9.4"
   },
-
+  "main": "react-native-components/index.tsx",
   "description": "react-native-components",
   "repository": {
     "type": "git",
