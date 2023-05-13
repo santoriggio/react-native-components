@@ -96,7 +96,11 @@ function Image({ ...props }: ImageProps) {
       <DefaultImage
         {...props}
         source={
-          error == false && typeof props.source == "string" && props.source.length > 10 ? props.source : defaultSource
+          error == false ||
+          typeof props.source == "number" ||
+          (typeof props.source == "string" && props.source.length > 10)
+            ? props.source
+            : defaultSource
         }
         onError={onError}
       />

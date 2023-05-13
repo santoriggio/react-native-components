@@ -8,7 +8,7 @@ import NoData from "./NoData";
 import Text from "./Text";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import ListItem from "./ListItem";
-import { Loading, useLayout, deepMerge } from "..";
+import { Loading, useLayout, deepMerge, AppSettings } from "..";
 
 const AnimatedFlatList = Animated.createAnimatedComponent<any>(DefaultFlatList);
 
@@ -40,11 +40,13 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
 
     const currentFlatlist = useRef<any>();
 
+    const merged = deepMerge(params, mergeParams);
+
     const { data, isLoading, refresh, refreshing, hasMore, loadMore } = useGetListData({
       data: props.data,
       endpoint,
       query,
-      params: deepMerge(params, mergeParams),
+      params: merged,
       onLoadEnd,
       enableDebugLogs,
       structure,
@@ -53,7 +55,20 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       handleErrors,
     });
 
-   
+    useEffect(() => {
+      const listener = AppSettings.addListener("refresh", (x) => {
+      
+        const module_id = typeof merged["module_id"] != "undefined" ? merged["module_id"] : undefined;
+
+        if (typeof module_id != "undefined" && typeof x != "undefined" && typeof x[module_id] != "undefined") {
+          if (x[module_id] == true) {
+            refresh();
+          }
+        }
+      });
+
+      return () => listener.remove();
+    }, []);
 
     const onScroll = useAnimatedScrollHandler({
       onScroll: (event) => {
@@ -70,7 +85,7 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       scrollToIndex(params) {
         currentFlatlist.current.scrollToIndex(params);
       },
-      refresh
+      refresh,
     }));
 
     // const onPress = useCallback(
@@ -108,8 +123,6 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
         </Text>
       );
     }
-
-
 
     if (data.length == 0) {
       return <NoData icon="database" onRefresh={refresh} refreshing={refreshing} />;
@@ -196,6 +209,9 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
     if (typeof endpoint == "undefined" || endpoint == "") {
       if (typeof keyExist(props.data) != "undefined" && props.data != null) {
         setData(props.data as any);
+        if (typeof props.onLoadEnd != "undefined" && typeof props.onLoadEnd == "function") {
+          props.onLoadEnd();
+        }
       }
       return setIsLoading(false);
     }
@@ -220,10 +236,7 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
       console.log(`📞 Fetch at ${endpoint} with`, params);
     }
 
-  
     const apiResult = await sendApiRequest(endpoint, params);
-
-
 
     setIsLoading(false);
     setRefreshing(false);
@@ -233,31 +246,21 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
     }
 
     if (typeof apiResult.error != "undefined") {
-      
       if (enableDebugLogs) {
         console.log(`🚨 Shit, something is wrong, see this error:`, apiResult.error);
       }
 
       setHasMore(false);
 
-
-
       if (params.page == 1) {
         setData([]);
       }
 
-
       const handleErrors = keyExist<FlatListProps<T>["handleErrors"]>(props.handleErrors);
 
       if (typeof handleErrors != "undefined") {
-       
-     
-       
-       
         if (typeof handleErrors[apiResult.error] != "undefined") {
           //The handler for this error exist
-
-          
 
           return;
         }
@@ -299,16 +302,15 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
     setHasMore(toReturn.length >= params.limit);
 
     setData((prevState) => {
-
-
-
-      if (typeof prevState == 'undefined' && toReturn.length == 0) {
-        return []
+      if (typeof prevState == "undefined" && toReturn.length == 0) {
+        return [];
       }
 
       if (typeof prevState == "undefined" || params.page == 1) {
         return toReturn;
       }
+
+      console.log(toReturn.length);
 
       return [...prevState, ...toReturn];
     });

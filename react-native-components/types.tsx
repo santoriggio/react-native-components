@@ -120,6 +120,7 @@ export type NoDataProps = {
 export type CartProps = {
   header?: ScreenDrawerComponent[];
   uniqueId?: string;
+  onChange?: (component: ScreenDrawerComponent, newValue?: string) => void;
   data?:
     | {
         title?: string;
@@ -241,6 +242,10 @@ export interface InputProps {
   value?: any;
   onChange?: (newValue: any) => void;
   box_id?: string;
+  suffix?: {
+    text?: string;
+    icon?: string;
+  };
   trigger?: {
     value?: any; // string, boolean, number, *maybe objects
     target: string | string[]; //Or object {}
@@ -321,7 +326,7 @@ export type SelectProps = {
    * @default 'select'
    */
 
-  type?: "select" | "multiselect" | "state"
+  type?: "select" | "multiselect" | "state";
 
   /**
    * The keys of the selected item

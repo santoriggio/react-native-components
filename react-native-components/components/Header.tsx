@@ -124,10 +124,10 @@ function Header({ ...props }: IHeader) {
   });
 
   return (
-    <AnimatedBlurView
-      onLayout={handleHeaderHeight}
-      animatedProps={AnimatedBlurViewProps}
-      tint={Colors.isDark ? "dark" : "light"}
+    <Animated.View
+      // onLayout={handleHeaderHeight}
+      // animatedProps={AnimatedBlurViewProps}
+      // tint={Colors.isDark ? "dark" : "light"}
       style={[
         props.scrollY ? rContainer : undefined,
         {
@@ -143,6 +143,7 @@ function Header({ ...props }: IHeader) {
           top: 0,
           left: 0,
           right: 0,
+
           ...props.containerStyle,
         },
       ]}
@@ -245,8 +246,6 @@ function Header({ ...props }: IHeader) {
           {typeof props.searchBarOptions.filters !== "undefined" && (
             <TouchableOpacity
               onPress={() => {
-                
-
                 SearchPickerController.show({
                   data: props.searchBarOptions?.selectedFilters,
                   content: props.searchBarOptions?.filters,
@@ -283,17 +282,19 @@ function Header({ ...props }: IHeader) {
 
       {typeof props.searchBarOptions != "undefined" && typeof props.searchBarOptions.selectedFilters != "undefined" && (
         <View style={{ marginTop: spacing }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: spacing }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: spacing }}
+          >
             {Object.keys(props.searchBarOptions.selectedFilters).map((key) => {
               const options = props.searchBarOptions?.selectedFilters[key];
 
-              const groupData = props.searchBarOptions?.filters?.filter(x=>x.id ==key )[0]
-
- 
+              const groupData = props.searchBarOptions?.filters?.filter((x) => x.id == key)[0];
 
               if (typeof options != "undefined" && Array.isArray(options) && options.length > 0)
-              return options.map((fil) => {
-                const value= groupData.items[fil]
+                return options.map((fil) => {
+                  const value = groupData.items[fil];
 
                   return (
                     <View
@@ -338,7 +339,9 @@ function Header({ ...props }: IHeader) {
                       >
                         <Icon name="close" color={"white"} />
                       </TouchableOpacity>
-                      <Text style={{ color: "white" }}>{groupData.title}: {value}</Text>
+                      <Text style={{ color: "white" }}>
+                        {groupData.title}: {value}
+                      </Text>
                     </View>
                   );
                 });
@@ -346,7 +349,7 @@ function Header({ ...props }: IHeader) {
           </ScrollView>
         </View>
       )}
-    </AnimatedBlurView>
+    </Animated.View>
   );
 }
 

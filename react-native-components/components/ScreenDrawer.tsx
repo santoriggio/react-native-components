@@ -28,12 +28,6 @@ import triggerAction from "../functions/triggerAction";
 import ButtonsList from "./ButtonsList";
 import Bullet from "./Bullet";
 
-/**
- *
- *
- *
- */
-
 interface I {
   data?: any;
   style?: (component: ScreenDrawerComponent) => void;
@@ -135,6 +129,15 @@ const RenderComponent = memo(({ component, ...props }: I) => {
         }
         if (component.align == "right") {
           toReturn.justifyContent = "flex-end";
+        }
+      }
+
+      if (component.component == "row") {
+        toReturn.alignItems = "flex-start";
+        if (typeof component.alignVertical != "undefined") {
+          if (component.alignVertical == "center") {
+            toReturn.alignItems = "center";
+          }
         }
       }
     }
@@ -266,13 +269,17 @@ const RenderComponent = memo(({ component, ...props }: I) => {
     case "video":
       return <VideoPlayer {...component} />;
     case "bullet":
-      return <Bullet {...component} />;
+      return <Bullet {...component} style={customStyle} />;
     case "row":
       return (
-        <View
+        <TouchableOpacity
+          disabled={typeof component.action != "undefined" ? false : true}
+          activeOpacity={typeof component.action != "undefined" ? 0.5 : 1}
+          onPress={() => {
+            triggerAction(component.action);
+          }}
           style={{
             flexDirection: "row",
-            alignItems: "flex-start",
             ...customStyle,
           }}
         >
@@ -293,7 +300,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                 </View>
               );
             })}
-        </View>
+        </TouchableOpacity>
       );
     case "column":
       return (
@@ -322,9 +329,9 @@ const RenderComponent = memo(({ component, ...props }: I) => {
         </View>
       );
     case "graph":
-      return <Graph {...component} />;
+      return <Graph {...component} style={customStyle} />;
     case "modulepicker":
-      return <Module value={props.value} onChange={handleChange} {...component} />;
+      return <Module {...component} value={props.value} onChange={handleChange} />;
     case "select":
       return <Select {...component} selected={props.value} onChange={handleChange} />;
     case "buttonslist":
@@ -409,7 +416,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   const checkIfCanContinue = () => {
     if (typeof props.content == "undefined" || typeof props.data == "undefined") return;
 
-    if (props.content.length == 0 || typeof props.onChange == "undefined") return;
+    if (!Array.isArray(props.content) || props.content.length == 0 || typeof props.onChange == "undefined") return;
 
     let canContinue: boolean = true;
 
@@ -420,7 +427,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
       if (field.required && field.id) {
         const field_data = props.data[field.id];
 
-        if (typeof field_data == "undefined" || field_data.trim() == "") {
+        if (typeof field_data == "undefined" || field_data.toString().trim() == "") {
           canContinue = false;
         }
       }
@@ -495,6 +502,21 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     }
   };
 
+  if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "cart") {
+    const cart = props.content[0];
+    return (
+      <Cart
+        {...cart}
+        data={
+          typeof props.data != "undefined" && typeof cart.id != "undefined" && typeof props.data[cart.id] != "undefined"
+            ? props.data[cart.id]
+            : undefined
+        }
+        onChange={onChange}
+      />
+    );
+  }
+
   if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "list") {
     return (
       <FlatList
@@ -510,10 +532,6 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     );
   }
 
-  if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "cart") {
-    return <Cart {...props.content[0]} />;
-  }
-
   return (
     <ScrollView scrollEnabled={props.scrollEnabled} {...props.scrollViewProps}>
       <View
@@ -523,7 +541,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
           props.content.length > 0 &&
           Array.isArray(props.content) &&
           props.content.map((component, index) => {
-            const data = typeof props.data != "undefined" ? props.data : {};
+            const data = typeof props.data != "undefined" && props.data != null ? props.data : {};
 
             if (shouldRender(component) && component.component == "box") {
               const box_data =
@@ -554,7 +572,10 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                       component.content.map((box_component, box_index) => {
                         if (shouldRender(box_component, component.id)) {
                           const value =
-                            typeof box_component.id != "undefined" && typeof box_data[box_component.id] != "undefined"
+                            typeof box_component.id != "undefined" &&
+                            typeof box_data != "undefined" &&
+                            box_data != null &&
+                            typeof box_data[box_component.id] != "undefined"
                               ? box_data[box_component.id]
                               : undefined;
 

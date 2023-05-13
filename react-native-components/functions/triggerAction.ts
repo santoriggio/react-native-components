@@ -13,18 +13,25 @@ import deepMerge from "./deepMerge";
  *
  * trigger Action function help to trigger the action of this library
  *
- * //TODO: Aggiungere i trigger dei picker
+ * //TODO: Possibilità di passare un array
  *
  *
  */
 
-async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
+async function triggerAction<T>(
+  action: Action<T> | Action<T>[] | undefined,
+  details?: T,
+  callback?: (details?: any) => void
+) {
   if (typeof action != "undefined") {
     if (typeof action == "function") {
       return action(details);
     }
 
-
+    if (Array.isArray(action)) {
+      action.forEach((act: any) => triggerAction(act, details, callback));
+      return;
+    }
 
     switch (action.type) {
       case "api":
@@ -32,23 +39,30 @@ async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
         const params = keyExist<ApiAction["params"]>(action.params, "isObject");
 
         if (typeof endpoint != "undefined") {
-          let merged = params
-          if(typeof action.mergeData != 'undefined'&&action.mergeData ==true){
-            merged =  deepMerge({ data: SearchPickerController.getData() }, params);
+          let merged = params;
+
+          if (typeof action.mergeData != "undefined" && action.mergeData == true) {
+            merged = deepMerge({ data: SearchPickerController.getData() }, params);
+          }
+
+          if (typeof callback != "undefined") {
+            callback({ loading: true });
           }
 
           const apiResult = await sendApiRequest(endpoint, merged);
 
-
+          if (typeof callback != "undefined") {
+            callback({ loading: false });
+          }
 
           if (typeof apiResult.error != "undefined") {
             //TODO:
             const message = apiResult.message;
-
+            const title = apiResult.title;
             MessageController.show({
               type: "alert",
-              title: "Ops",
-              message: typeof message != "undefined" && message  != '' ? message.message : "Si è verificato un errore",
+              title: typeof title != "undefined" && title != "" ? title : "Ops",
+              message: typeof message != "undefined" && message != "" ? message : "Si è verificato un errore",
             });
             return;
           }
@@ -58,7 +72,7 @@ async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
           if (typeof apiAction != "undefined") {
             if (Array.isArray(apiAction)) {
               //array
-              apiAction.forEach((act) => triggerAction(act));
+              apiAction.forEach((act, d, c) => triggerAction(act, d, c));
             } else {
               triggerAction(apiAction);
             }
@@ -86,9 +100,11 @@ async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
         break;
       case "listener":
         const event = keyExist<ListenerAction["event"]>(action.event, "isString");
+
         if (typeof event != "undefined") {
           AppSettings.emitListener(event, action.params);
         }
+
         break;
       case "picker":
         const picker = keyExist<PickerAction["picker"]>(action.picker, "isString");
@@ -99,15 +115,19 @@ async function triggerAction<T>(action: Action<T> | undefined, details?: T) {
               content: [],
             });
           }
+
           if (picker == "search") {
-            console.log(action.data);
             SearchPickerController.show({
+              tabs: action.tabs,
               //@ts-ignore
               data: action.data,
+              //@ts-ignore
               footer: action.footer,
               content: action.content,
             });
           }
+        } else {
+          SearchPickerController.hide();
         }
         break;
       case "popup":

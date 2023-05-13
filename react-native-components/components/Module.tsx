@@ -21,21 +21,42 @@ function Module({
   const [data, setData] = useState<any[] | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof value != "undefined" && typeof data != "undefined" && value != data.id) {
+    if (typeof value != "undefined" && value != "") {
       getData();
     }
-  }, [value]);
+  }, [JSON.stringify(value)]);
 
   const getData = async () => {
     //get record from id
 
-    const apiResult = await sendApiRequest("/modules/records", { module_id: props.module, id: value });
+    if (module == "contenuti_media") {
+      const apiResult = await sendApiRequest("/media/format", { files: value });
+
+      if (typeof apiResult.error != "undefined") {
+        return;
+      }
+
+      const format = apiResult.data;
+
+      setData(
+        format.map((x: any) => {
+          if (typeof x.format != "undefined") {
+            return x.format;
+          }
+
+          return x;
+        })
+      );
+      return;
+    }
+
+    const apiResult = await sendApiRequest("/modules/records", { module_id: module, id: value });
 
     if (typeof apiResult.error != "undefined") {
       return;
     }
 
-    const record = apiResult.data.data[0];
+    const record = apiResult.data.data;
 
     setData(record);
   };
@@ -56,8 +77,28 @@ function Module({
         },
       ],
       onSuccess: (selected, id) => {
-        onChange(id[0]);
-        setData(selected);
+        if (module == "contenuti_media") {
+          onChange(
+            selected.map((x) => {
+              if (typeof x.return != "undefined" && typeof x.return.data != "undefined") {
+                return x.return.data;
+              }
+            })
+          );
+        } else if (limit == 1) {
+          onChange(id[0]);
+        } else {
+          onChange(id);
+        }
+
+        setData(
+          selected.map((x) => {
+            if (typeof x.return != "undefined" && typeof x.return.format != "undefined") {
+              return x.return.format;
+            }
+            return x;
+          })
+        );
       },
     });
   };
@@ -72,9 +113,11 @@ function Module({
           {(required == true || required == 1) && <Text style={{ color: Colors.danger }}> *</Text>}
         </View>
       )}
-      {typeof data != "undefined" ? (
+      {typeof data != "undefined" && data != null && Object.keys(data).length > 0 ? (
         data.map((x, id) => {
-          return <ListItem key={id} {...x} onPress={openPicker} selected={undefined} />;
+          if (typeof x.content != "undefined") {
+            return <ListItem key={id} {...x} onPress={openPicker} selected={undefined} />;
+          }
         })
       ) : (
         <View>

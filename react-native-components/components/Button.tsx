@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Action, ButtonProps, ButtonTypes } from "../types";
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import Text from "./Text";
 import keyExist from "../functions/keyExist";
 import Icon from "./Icon";
@@ -24,7 +24,13 @@ function Button(props: ButtonProps) {
   const onPress = async () => {
     if (loadingState || active == false) return;
 
-    if (typeof otherProps.action != "undefined") return triggerAction(otherProps.action);
+    if (typeof otherProps.action != "undefined") {
+      return triggerAction(otherProps.action, undefined, (info) => {
+        if (typeof info != "undefined" && typeof info.loading != "undefined") {
+          setLoadingState(info.loading);
+        }
+      });
+    }
   };
 
   const hasIcon = useMemo(() => {

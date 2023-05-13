@@ -16,6 +16,8 @@ function ListItem({ ...props }: any) {
   const onPress = () => {
     if (typeof props.action != "undefined") {
       triggerAction(props.action, props);
+
+      if (typeof props.action.preventDefault != "undefined" && props.action.preventDefault == true) return;
     }
 
     if (typeof props.onPress != "undefined") {

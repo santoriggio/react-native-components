@@ -1,4 +1,5 @@
 import React, {
+  forwardRef,
   MutableRefObject,
   useCallback,
   useEffect,
@@ -9,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import { View, Modal, BackHandler, TouchableOpacity, Platform, StyleSheet } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import Animated, { FadeIn, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import useLayout from "../hooks/useLayout";
@@ -109,39 +110,18 @@ function SearchPicker() {
   const { spacing, icon_size, radius, Colors } = useLayout();
   const [modalVisible, setModalVisible] = useState(false);
   const modalRef = useRef<CustomModalRef>();
-  const scrollY = useSharedValue(0);
   const { bottom, top } = useSafeAreaInsets();
-  const [headerHeight, setHeaderHeight] = useState<number>(0);
-
   const [tabs, setTabs] = useState<any>(undefined);
-
   const [options, setOptions] = useState<Options[]>([]);
-
   const [selected, setSelected] = useState<any[] | undefined>([]);
   const [query, setQuery] = useState<string>("");
-
   const [data, setData] = useState<any>({});
-
-  const [canContinue,setCanContinue] = useState<boolean>(true)
+  const [canContinue, setCanContinue] = useState<boolean>(true);
+  const screens = useRef<any>({});
 
   useLayoutEffect(() => {
     SearchPickerController.setModalRef(modalRef);
   }, []);
-
-  useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => BackHandler.removeEventListener("hardwareBackPress", backAction);
-  }, [modalVisible]);
-
-  const backAction = () => {
-    if (modalVisible) {
-      SearchPickerController.hide();
-      return true;
-    }
-
-    return false;
-  };
 
   useImperativeHandle(modalRef, () => ({
     show: (option) => {
@@ -155,7 +135,12 @@ function SearchPicker() {
         }
 
         setOptions((prevState) => {
-          if (typeof option.data != "undefined") setData(option.data);
+          setTimeout(() => {
+            if (typeof option.data != "undefined") {
+              const index = prevState.length;
+              screens.current[index].setData(option.data);
+            }
+          }, 100);
 
           return [...prevState, option];
         });
@@ -169,7 +154,7 @@ function SearchPicker() {
       if (options.length > 1) {
         //remove last option
         setOptions((prevState) => {
-          return prevState.slice(0, prevState.length - 1);
+          return [prevState[0]];
         });
       } else {
         //hide the modal
@@ -178,7 +163,8 @@ function SearchPicker() {
       }
     },
     getData: () => {
-      return data;
+      const index = options.length;
+      return screens.current[index - 1].getData();
     },
     getStatus: () => modalVisible,
   }));
@@ -197,17 +183,28 @@ function SearchPicker() {
     return (
       <TouchableOpacity
         onPress={() => {
+          if (options.length > 1) {
+            setOptions((prevState) => {
+              return prevState.slice(0, prevState.length - 1);
+            });
+            return;
+          }
+
           SearchPickerController.hide();
         }}
         activeOpacity={0.5}
         style={{ paddingHorizontal: spacing }}
       >
-        <Text style={{ color: Colors.gray }} size="l" bold>
-          Chiudi
-        </Text>
+        {options.length > 1 ? (
+          <Icon name="chevron-back" size={icon_size * 1.2} />
+        ) : (
+          <Text style={{ color: Colors.gray }} size="l" bold>
+            Chiudi
+          </Text>
+        )}
       </TouchableOpacity>
     );
-  }, []);
+  }, [JSON.stringify(options)]);
 
   const headerRight = useMemo(() => {
     return undefined;
@@ -278,82 +275,140 @@ function SearchPicker() {
   }, [JSON.stringify(lastOption)]);
 
   return (
-    <Modal visible={modalVisible}  animationType="slide" presentationStyle="formSheet">
+    <Modal
+      visible={modalVisible}
+      animationType="slide"
+      presentationStyle="formSheet"
+      onRequestClose={SearchPickerController.hide}
+    >
       <Header
-        //title="Cerca"
         left={headerLeft}
         right={headerRight}
-        largeTitle
         searchBarOptions={searchBarOptions}
         borderBottom={typeof tabs != "undefined" ? false : true}
-        //containerStyle={{ paddingTop: Platform.select({ ios: spacing }) }}
+        containerStyle={{
+          paddingTop: Platform.select({ ios: spacing }),
+          paddingBottom: spacing * 0.5,
+        }}
       />
-
-      {lastOption.type == "modulepicker" && (
-        <View style={{ flex: 1,backgroundColor:Colors.background}}>
-        <ScreenDrawer
-            content={lastOption.content}
-            flatListProps={{
-              query,
-              selected,
-              onPressItem,
-            }}
-          />
-          {typeof lastOption.limit != "undefined" && lastOption.limit > 1 && (
-            <View
-              style={{
-                padding: spacing,
-                borderTopWidth: 1,
-                borderColor: Colors.border,
-                paddingBottom: bottom == 0 ? spacing : bottom,
-              }}
-            >
-              <Button
-                title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
-                action={() => {
-                  if (typeof lastOption != "undefined" && typeof lastOption.type != "undefined") {
-                    if (lastOption.type == "modulepicker") {
-                      const { limit = 1, content, module_id, onSuccess = () => {} } = lastOption;
-
-                      if (typeof selected != "undefined") {
-                        SearchPickerController.hide();
-                        onSuccess(
-                          selected,
-                          selected.map((x) => x.id)
-                        );
-                      }
-                    }
-                  }
-                }}
-              />
-            </View>
-          )}
-        </View>
-      )}
-
-      {typeof lastOption.type == "undefined" && (
-        <View style={{ flex: 1,backgroundColor:Colors.background}}>
-          <ScreenDrawer data={data} setData={setData} content={lastOption.content} onChange={details => {
-            setCanContinue(details.canContinue)
-          }} />
-          {typeof lastOption.footer != "undefined" && (
-            <View
-              style={{
-                borderTopWidth: 1,
-                borderColor: Colors.border,
-                paddingBottom: (bottom == 0 ? spacing : bottom) - spacing,
-              }}
-            >
-              <ScreenDrawer data={data} setData={setData} content={lastOption.footer} />
-              {!canContinue && (
-                <View style={{...StyleSheet.absoluteFillObject,backgroundColor:Colors.gray, opacity:.3}} />
-              )}
-            </View>
-          )}
-        </View>
-      )}
+      <View style={{ flex: 1 }}>
+        {options.map((option: any, index: number) => {
+          return (
+            <CustomScreen
+              key={index}
+              ref={(ref) => (screens.current[index] = ref)}
+              {...option}
+              data={data}
+              setData={setData}
+              query={query}
+              selected={selected}
+              onPressItem={onPressItem}
+            />
+          );
+        })}
+      </View>
     </Modal>
   );
 }
 export { SearchPickerController };
 export default SearchPicker;
+
+const CustomScreen = forwardRef<any, any>(({ query, selected, onPressItem, ...option }, ref) => {
+  const { Colors, spacing, icon_size } = useLayout();
+  const { bottom } = useSafeAreaInsets();
+  const [data, setData] = useState<any>({});
+
+  useImperativeHandle(ref, () => ({
+    setData: (newData: any) => setData(newData),
+    getData: () => data,
+  }));
+
+  if (option.type == "modulepicker") {
+    return (
+      <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
+        <ScreenDrawer
+          content={option.content}
+          flatListProps={{
+            query,
+            selected,
+            onPressItem,
+          }}
+        />
+        {typeof option.limit != "undefined" && option.limit > 1 && (
+          <View
+            style={{
+              padding: spacing,
+              borderTopWidth: 1,
+              borderColor: Colors.border,
+              paddingBottom: bottom == 0 ? spacing : bottom,
+            }}
+          >
+            <Button
+              title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
+              action={() => {
+                if (typeof option != "undefined" && typeof option.type != "undefined") {
+                  if (option.type == "modulepicker") {
+                    const { limit = 1, content, module_id, onSuccess = () => {} } = option;
+
+                    if (typeof selected != "undefined") {
+                      SearchPickerController.hide();
+                      onSuccess(
+                        selected,
+                        selected.map((x: any) => x.id)
+                      );
+                    }
+                  }
+                }
+              }}
+            />
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  if (typeof option.type == "undefined") {
+    return (
+      <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
+        {typeof option.tabs != "undefined" && (
+          <TabNavigation
+            data={data}
+            setData={setData}
+            tabs={option.tabs.map((tab: any) => {
+              return {
+                ...tab,
+                path: "/" + tab.id,
+              };
+            })}
+          />
+        )}
+
+        {typeof option.tabs == "undefined" && (
+          <ScreenDrawer
+            data={data}
+            setData={setData}
+            content={option.content}
+            // onChange={(details) => {
+            //   setCanContinue(details.canContinue);
+            // }}
+          />
+        )}
+        {typeof option.footer != "undefined" && (
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderColor: Colors.border,
+              paddingBottom: (bottom == 0 ? spacing : bottom) - spacing,
+            }}
+          >
+            <ScreenDrawer data={data} setData={setData} content={option.footer} />
+            {/* {!canContinue && (
+              <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.gray, opacity: 0.3 }} />
+            )} */}
+          </View>
+        )}
+      </View>
+    );
+  }
+  return null;
+});

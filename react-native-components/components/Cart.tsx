@@ -19,7 +19,11 @@ import { SearchPickerController } from "./SearchPicker";
  */
 
 function Cart({ ...props }: CartProps) {
-  const [cart, setCart] = useState<any>(typeof props.data != "undefined" ? props.data : [{}]);
+  const [cart, setCart] = useState<any>([
+    {
+      content: [{ component: "text", title: "Carrello", subtitle: "Caricamento..." }],
+    },
+  ]);
 
   const [header, setHeader] = useState<ScreenDrawerComponent[]>([]);
 
@@ -34,11 +38,14 @@ function Cart({ ...props }: CartProps) {
       }
 
       if (event.event == "set") {
-        const index = raw_data.findIndex((x) => x.id != event.item.id || x.type != event.item.type)
-        let toReturn = raw_data
-        toReturn[index] = event.item
-        return prepare(toReturn)
+        SearchPickerController.hide();
+        const index = raw_data.findIndex((x) => x.id == event.item.id && x.type == event.item.type);
 
+        let toReturn = raw_data;
+
+        toReturn[index] = event.item;
+
+        return prepare(toReturn);
       }
 
       if (event.event == "remove") {
@@ -50,17 +57,15 @@ function Cart({ ...props }: CartProps) {
   }, [JSON.stringify(raw_data)]);
 
   useEffect(() => {
-    prepare(props.data);
+    if (typeof props.data != "undefined" && typeof props.data == "string") {
+      prepare(props.data);
+    } else {
+      prepare();
+    }
   }, []);
 
-  const prepare = async (newCart: any) => {
-
-
-
-
+  const prepare = async (newCart?: any) => {
     const apiResult = await sendApiRequest("/cart/prepare", { uniqueId: props.uniqueId, cart: newCart });
-
-    console.log(apiResult)
 
     if (typeof apiResult.error != "undefined") {
       return;
@@ -70,9 +75,9 @@ function Cart({ ...props }: CartProps) {
       setHeader(apiResult.data.header);
     }
 
-
-
-    console.log(apiResult.data.content)
+    if (typeof props.onChange != "undefined") {
+      props.onChange(props, JSON.stringify(apiResult.data.data));
+    }
 
     set_raw_data(apiResult.data.data);
     return setCart(apiResult.data.content);

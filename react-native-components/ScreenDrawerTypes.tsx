@@ -102,6 +102,7 @@ interface Row {
   margin?: Margin;
   border?: Border;
   align?: "left" | "center" | "right";
+  action?: Action<Row>;
   windowSize?: number;
 }
 
@@ -203,7 +204,7 @@ export type ScreenDrawerProps = {
   content?: ScreenDrawerComponent[];
   style?: ViewStyle;
   flatListProps?: FlatListProps<any> & { mergeParams?: any };
-  scrollViewProps?: ScrollViewProps
+  scrollViewProps?: ScrollViewProps;
   scrollEnabled?: boolean;
   path?: string;
   onChange?: (details: any) => void;

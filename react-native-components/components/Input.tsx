@@ -44,14 +44,14 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
       setSecureTextEntry(true);
     }
 
-    if (typeof component.trigger != 'undefined') {
+    if (typeof component.trigger != "undefined") {
       if (typeof onChange != "undefined" && typeof onChange == "function") {
         onChange(value);
       }
     }
 
     setData(value);
-  }, []);
+  }, [JSON.stringify(value)]);
 
   const onChangeInput = (newValue: any, details?: any) => {
     let toReturn = newValue;
@@ -200,6 +200,8 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
             height: spacing * 10,
             justifyContent: "center",
             alignItems: "center",
+            borderRadius: radius,
+            overflow: "hidden",
           }}
         >
           <Text numberOfLines={10} style={{ padding: spacing * 0.5, marginHorizontal: spacing * 0.5 }}>
@@ -244,7 +246,7 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
         <TextInput
           onChangeText={onChangeInput}
           // textContentType="username"
-          defaultValue={data}
+          defaultValue={ typeof data != 'undefined' && data != null ? data.toString():''}
           placeholder={
             typeof component.placeholder !== "undefined" && component.placeholder !== ""
               ? component.placeholder
@@ -252,7 +254,7 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
           }
           multiline={component.type === "textarea"}
           secureTextEntry={secureTextEntry}
-          // keyboardType={keyboardType}
+          keyboardType={keyboardType}
           placeholderTextColor={Colors.gray}
           autoCapitalize={component.type === "email" || component.type === "password" ? "none" : undefined}
           size={component.size}
@@ -273,6 +275,28 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
           >
             <Icon family="Feather" name={secureTextEntry ? "eye-off" : "eye"} size={20} />
           </TouchableOpacity>
+        )}
+        {typeof component.suffix != "undefined" && (
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {typeof component.suffix.text != "undefined" && component.suffix.text != "" && (
+              <View
+                style={{
+                  height: "100%",
+                  width: spacing * 4.2,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  aspectRatio: 1,
+                }}
+              >
+                <Text>{component.suffix.text}</Text>
+              </View>
+            )}
+            {typeof component.suffix.icon != "undefined" && component.suffix.icon != "" && (
+              <View style={{ justifyContent: "center", alignItems: "center", width: spacing * 4.2, aspectRatio: 1 }}>
+                <Icon name={component.suffix.icon} />
+              </View>
+            )}
+          </View>
         )}
       </View>
     );

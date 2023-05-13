@@ -11,6 +11,9 @@ import {
   useCachedResources,
   config,
   Header,
+  Button,
+  SearchPickerController,
+  BottomSheetController,
 } from "./react-native-components";
 
 /**
@@ -51,7 +54,7 @@ config.setConfig({
       Accept: "application/json",
       "Content-Type": "application/json",
       "X-Fw360-Key": "global,2041",
-      //"X-Fw360-UserToken": "D0rSaGP1A2RzQcgXyBFpM3V4n7WZwd9OhINlEJH8",
+      "X-Fw360-UserToken": "D0rSaGP1A2RzQcgXyBFpM3V4n7WZwd9OhINlEJH8",
       //"X-Fw360-Useragent": globalThis.userAgent,
     },
     errors: {
@@ -71,11 +74,7 @@ export default function App() {
   const [filters, setFilters] = useState<any>({});
   const [selectedFilters, setSelectedFilters] = useState<any>(undefined);
 
-  const flatlist = useRef<any>();
-
   if (!isLoadingComplete) return null;
-
-  const module = "manage_customers";
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -94,38 +93,17 @@ export default function App() {
           borderBottom={borderVisible}
         />
 
-        <ScreenDrawer
-          content={[
-            {
-              component: "list",
-              endpoint: "/modules/records",
-              path: "data/data",
-              params: {
-                module_id: "blog_articoli",
-              },
-            },
-          ]}
-          flatListProps={{}}
-        />
-
-        {/* <Button
-          title={`Picker: ${module}`}
-          style={{ marginHorizontal: 12 }}
-          action={() => {
-            SearchPickerController.show({
-              content: [
-                {
-                  component: "list",
-                  endpoint: "modules/records",
-                  path: "data/data",
-                  params: {
-                    module_id: module,
-                  },
-                },
-              ],
-            });
-          }}
-        /> */}
+        <ScreenDrawer content={[
+          {
+            component: 'button',
+            title: 'Press',
+            action: {
+              type: 'api',
+              endpoint: '',
+              
+            }
+          }
+       ]} />
 
         <FlagPicker />
         <SearchPicker />

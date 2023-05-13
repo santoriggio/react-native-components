@@ -36,6 +36,7 @@ import Text from "./Text";
 import ScreenDrawer from "./ScreenDrawer";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import { FlagPickerController } from "./FlagPicker";
+import { SearchPickerController } from "./SearchPicker";
 
 type BottomSheetMethods = {
   show: (newContent: ScreenDrawerComponent[]) => void;
@@ -62,7 +63,7 @@ const BottomSheet: FC = () => {
   const { bottom, top } = useSafeAreaInsets();
   const bottomSheetRef = useRef<DefaultBottomSheet>(null);
   const [content, setContent] = useState<ScreenDrawerComponent[]>([]);
-  const [visible,setVisible] = useState<boolean>(false)
+  const [visible, setVisible] = useState<boolean>(false);
   const _bottom = bottom === 0 ? spacing : bottom;
   const modalRef = useRef<BottomSheetMethods>();
 
@@ -78,7 +79,7 @@ const BottomSheet: FC = () => {
 
   const backAction = () => {
     if (visible) {
-      BottomSheetController.hide()
+      BottomSheetController.hide();
       return true;
     }
 
@@ -107,16 +108,29 @@ const BottomSheet: FC = () => {
 
   const show = (newContent: typeof content) => {
     if (JSON.stringify(newContent) != JSON.stringify(content)) {
+      if (SearchPickerController.isVisible()) {
+        SearchPickerController.show({
+          content: newContent,
+        });
+        return;
+      }
+
       setContent(newContent);
     }
 
-
-    setVisible(true)
+    setVisible(true);
     bottomSheetRef.current?.snapToIndex(0);
   };
 
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1) {
+      //close
+      setVisible(false);
+    }
+  }, []);
+
   const hide = () => {
-    setVisible(false)
+    setVisible(false);
     bottomSheetRef.current?.close();
     //setContent([]);
   };
@@ -149,7 +163,7 @@ const BottomSheet: FC = () => {
         zIndex: 100000,
         elevation: 10,
       }}
-      //   onChange={handleSheetChanges}
+      onChange={handleSheetChanges}
       handleStyle={{ backgroundColor: Colors.background }}
       backgroundStyle={{ backgroundColor: Colors.background }}
       handleIndicatorStyle={{ backgroundColor: Colors.gray, width: spacing * 5, height: spacing / 2 }}

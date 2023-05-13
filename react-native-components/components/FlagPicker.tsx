@@ -60,21 +60,6 @@ function FlagPicker() {
     FlagPickerController.setModalRef(modalRef);
   }, []);
 
-  useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", backAction);
-
-    return () => BackHandler.removeEventListener("hardwareBackPress", backAction);
-  }, [modalVisible]);
-
-  const backAction = () => {
-    if (modalVisible) {
-      FlagPickerController.hide();
-      return true;
-    }
-
-    return false;
-  };
-
   useImperativeHandle(modalRef, () => ({
     show: (options) => {
       setModalVisible(true);
@@ -130,7 +115,12 @@ function FlagPicker() {
   };
 
   return (
-    <Modal visible={modalVisible} animationType="slide" presentationStyle="formSheet">
+    <Modal
+      visible={modalVisible}
+      animationType="slide"
+      presentationStyle="formSheet"
+      onRequestClose={FlagPickerController.hide}
+    >
       <Header
         title="Seleziona uno stato"
         left={headerLeft}

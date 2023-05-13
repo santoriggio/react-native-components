@@ -9,6 +9,7 @@ import Text from "./Text";
 import Flag from "./Flag";
 import { Flags } from "../utils/Flags";
 import { FlagPickerController } from "./FlagPicker";
+import { validatePhoneNumberLength } from "libphonenumber-js";
 type Selected = string | string[] | undefined;
 
 function Select(props: SelectProps) {
@@ -35,7 +36,7 @@ function Select(props: SelectProps) {
         setSelectedItem(otherProps.selected);
       }
     }
-  }, []);
+  }, [JSON.stringify(otherProps.selected)]);
 
   const isSelected = useCallback(
     (key: string) => {
@@ -162,6 +163,7 @@ function Select(props: SelectProps) {
               if (typeof otherProps.onChange == "function") {
                 otherProps.onChange(toReturn as any);
               }
+              
               setSelectedItem(toReturn);
             };
 
