@@ -3,7 +3,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   useLayout,
-  ScreenDrawer,
   FlagPicker,
   BottomSheet,
   SearchPicker,
@@ -11,33 +10,10 @@ import {
   useCachedResources,
   config,
   Header,
-  Button,
-  SearchPickerController,
-  BottomSheetController,
+  TabNavigation,
+  ScreenDrawer,
+  Text,
 } from "./react-native-components";
-
-/**
- 
- 
-[
-  {
-   component: 'text',
-   title: 'Aggiungi prodotto'
-   icon: '',
-   margin: {
-   top:1,
-   left:1
-   },
-   action: *picker
-  },
-  {
-  component:'text',
-  }
-]
- 
- */
-
-// "main": "react-native-components/index.tsx",
 
 config.setConfig({
   radius: 12,
@@ -68,11 +44,13 @@ export default function App() {
   const isLoadingComplete = useCachedResources();
 
   const [query, setQuery] = useState<string>("");
-  const [data, setData] = useState<any>({});
-  const [borderVisible, setBorderVisible] = useState<boolean>(false);
 
   const [filters, setFilters] = useState<any>({});
   const [selectedFilters, setSelectedFilters] = useState<any>(undefined);
+
+  const [data, setData] = useState<any>({});
+
+  const [canContinue, setCanContinue] = useState<boolean>(false);
 
   if (!isLoadingComplete) return null;
 
@@ -82,6 +60,7 @@ export default function App() {
         <Header
           title="react-native-components"
           largeTitle
+          borderBottom={false}
           searchBarOptions={{
             onChangeText: (text) => {
               setQuery(text);
@@ -90,21 +69,56 @@ export default function App() {
             selectedFilters,
             setSelectedFilters,
           }}
-          borderBottom={borderVisible}
+        />
+        <Text>{JSON.stringify(canContinue)}</Text>
+        <TabNavigation
+          data={data}
+          setData={setData}
+          tabs={[
+            {
+              id: "first",
+              title: "Primo",
+              path: "/first",
+              content: [
+                {
+                  id: "in",
+                  component: "input",
+                  type: "text",
+                  required: true,
+                  title: "Input",
+                },
+              ],
+            },
+            {
+              id: "second",
+              path: "/second",
+              title: "Secondo",
+              content: [
+                {
+                  id: "in",
+                  component: "input",
+                  type: "text",
+                  required: true,
+                  title: "Input",
+                },
+              ],
+            },
+          ]}
+          onChange={(details) => {
+            setCanContinue(details.canContinue);
+          }}
         />
 
-        <ScreenDrawer content={[
-          {
-            component: 'button',
-            title: 'Press',
-            action: {
-              type: 'api',
-              endpoint: '',
-              
-            }
-          }
-       ]} />
-
+        <ScreenDrawer
+          canContinue={canContinue}
+          content={[
+            {
+              component: "button",
+              checkData: true,
+              title: "Hey",
+            },
+          ]}
+        />
         <FlagPicker />
         <SearchPicker />
         <BottomSheet />

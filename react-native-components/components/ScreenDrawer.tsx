@@ -10,19 +10,13 @@ import ReviewsSummary from "./ReviewsSummary";
 import Slider from "./Slider";
 import Text from "./Text";
 import VideoPlayer from "./VideoPlayer";
-import * as Linking from "expo-linking";
-import sendApiRequest from "../functions/sendApiRequest";
-import { ButtonProps } from "../types";
 import Accordion from "./Accordion";
 import Image from "./Image";
 import Graph from "./Graph";
 import FlatList from "./FlatList";
 import Cart from "./Cart";
-import { onChange } from "react-native-reanimated";
 import ScrollView from "./ScrollView";
-import AppSettings from "../utils/AppSettings";
 import Module from "./Module";
-import { Ionicons } from "@expo/vector-icons";
 import Select from "./Select";
 import triggerAction from "../functions/triggerAction";
 import ButtonsList from "./ButtonsList";
@@ -36,6 +30,7 @@ interface I {
   value?: any;
   parent?: ScreenDrawerComponent;
   onChange?: (component: ScreenDrawerComponent, newValue: any, box_id?: string) => void;
+  canContinue?: boolean | 0 | 1;
 }
 
 const RenderComponent = memo(({ component, ...props }: I) => {
@@ -178,7 +173,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
     case "input":
       return <Input value={props.value} onChange={handleChange} {...component} />;
     case "button":
-      return <Button {...component} style={customStyle} />;
+      return <Button {...component} active={props.canContinue} style={customStyle} />;
     case "reviews":
       return <ReviewsSummary {...component} style={customStyle} />;
     case "slider":
@@ -204,7 +199,8 @@ const RenderComponent = memo(({ component, ...props }: I) => {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: filled ? component.color : undefined,
+            backgroundColor:
+              typeof component.bgColor != "undefined" ? component.bgColor : filled ? component.color : undefined,
             paddingHorizontal: filled ? spacing * 0.4 : undefined,
             paddingVertical: filled ? spacing * 0.2 : undefined,
             borderRadius: radius * 0.6,
@@ -215,7 +211,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
             <Icon
               family="Feather"
               name={component.icon}
-              color={textColor == "light" ? Colors.gray : filled == true ? "white" : textColor}
+              color={textColor == "light" ? Colors.gray : textColor}
               style={{ width: icon_size, textAlign: "center", marginRight: spacing }}
             />
           )}
@@ -235,12 +231,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                 numberOfLines={typeof component.numberOfLines != "undefined" ? component.numberOfLines : 1}
                 bold={component.bold}
                 size={component.size}
-                style={[
-                  {
-                    color: textColor == "light" ? Colors.gray : filled == true ? "white" : textColor,
-                  },
-                  component.style,
-                ]}
+                style={[{ color: textColor == "light" ? Colors.gray : textColor }, component.style]}
               >
                 {component.title}
               </Text>
@@ -345,9 +336,15 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   const { spacing, Colors, radius, fontSize } = useLayout();
   const [hiddenComponents, setHiddenComponents] = useState<string[]>([]);
 
+  const [canContinue, setCanContinue] = useState<boolean>(false);
+
   useEffect(() => {
-    checkIfCanContinue();
-  }, [JSON.stringify(props.data), JSON.stringify(props.content)]);
+    if (typeof props.canContinue != "undefined") {
+      setCanContinue(props.canContinue);
+    } else {
+      checkIfCanContinue();
+    }
+  }, [props.canContinue, JSON.stringify(props.data), JSON.stringify(props.content)]);
 
   const onChange = useCallback(
     (component: ScreenDrawerComponent, newValue: any, box_id?: string) => {
@@ -433,6 +430,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
       }
     });
 
+    setCanContinue(canContinue);
     return props.onChange({ canContinue });
   };
 
@@ -627,6 +625,13 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                     value={value}
                     component={component}
                     onChange={onChange}
+                    canContinue={
+                      component.component == "button" &&
+                      typeof component.checkData != "undefined" &&
+                      component.checkData == true
+                        ? canContinue
+                        : undefined
+                    }
                   />
                 </View>
               );

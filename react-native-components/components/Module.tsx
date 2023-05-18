@@ -11,6 +11,7 @@ import Text from "./Text";
 function Module({
   required = false,
   limit = 1,
+  global = 0,
   value,
   onChange = () => {},
   module = "contenuti_media",
@@ -30,7 +31,7 @@ function Module({
     //get record from id
 
     if (module == "contenuti_media") {
-      const apiResult = await sendApiRequest("/media/format", { files: value });
+      const apiResult = await sendApiRequest("/media/format", { files: value, global });
 
       if (typeof apiResult.error != "undefined") {
         return;
@@ -73,6 +74,7 @@ function Module({
           path: "data/data",
           params: {
             module_id: module,
+            params: { global },
           },
         },
       ],

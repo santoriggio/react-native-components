@@ -24,6 +24,7 @@ interface Text extends TextProps {
   id?: string;
   component: "text";
   title?: string;
+  image?: string;
   type?: "filled";
   subtitle?: string;
   color?: string;
@@ -39,6 +40,7 @@ interface Text extends TextProps {
 interface Button extends ButtonProps {
   id?: string;
   component: "button";
+  checkData?: boolean | 0 | 1;
   margin?: Margin;
   windowSize?: number;
 }
@@ -208,6 +210,7 @@ export type ScreenDrawerProps = {
   scrollEnabled?: boolean;
   path?: string;
   onChange?: (details: any) => void;
+  canContinue?: boolean | 0 | 1
   drillProps?: boolean;
   hasMargin?: boolean;
 };

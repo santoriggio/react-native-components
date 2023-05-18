@@ -186,6 +186,7 @@ export type TabNavigationProps = {
     icon?: string;
     content: ScreenDrawerComponent[];
   }[];
+  onChange?: (details?: any) => void;
 };
 
 export interface ImageProps extends DefaultImageProps {
@@ -349,6 +350,7 @@ export type ModuleProps = {
   required?: boolean | 1 | 0;
   limit?: number;
   icon?: string;
+  global?: boolean | 0 | 1;
 };
 
 export type SkeletonPlaceholderComponent = {
@@ -517,5 +519,9 @@ export type PickerAction = {
   content: ScreenDrawerComponent[];
   callback?: Action<any>;
 };
+
+export type ShareAction = {
+
+}
 
 export type Action<T> = ((details?: T) => void) | LinkAction | ApiAction | PopupAction | ListenerAction | PickerAction;
