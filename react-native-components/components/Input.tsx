@@ -18,6 +18,8 @@ import Button from "./Button";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import config from "../utils/Config";
+import { RenderHTML } from "..";
+import Slider from "@react-native-community/slider";
 
 function Input({ value, onChange, required = false, ...component }: InputProps) {
   const { spacing, icon_size, radius, fontSize, Colors } = useLayout();
@@ -29,24 +31,14 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
 
   const googleInput = useRef<GooglePlacesAutocompleteRef>(null);
 
-  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(false);
+  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(component.type == "password" ? true : false);
 
-  const [data, setData] = useState<any>(undefined);
+  const [data, setData] = useState<any>(value);
 
   useEffect(() => {
     if (component.type === "address") {
       if (typeof value !== "undefined" && value !== "") {
         googleInput.current?.setAddressText(value);
-      }
-    }
-
-    if (component.type === "password") {
-      setSecureTextEntry(true);
-    }
-
-    if (typeof component.trigger != "undefined") {
-      if (typeof onChange != "undefined" && typeof onChange == "function") {
-        onChange(value);
       }
     }
 
@@ -86,13 +78,13 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
     if (component.type == "checkbox") {
       return (
         <TouchableOpacity
-          onPress={() => onChangeInput(undefined)}
+          onPress={() => onChangeInput(!data)}
           activeOpacity={0.5}
           style={{ flexDirection: "row", alignItems: "center", minHeight: spacing * 4.2 }}
         >
           <Checkbox isChecked={data} />
           {typeof component.placeholder !== "undefined" && (
-            <TouchableOpacity activeOpacity={0.5} onPress={() => onChangeInput(undefined)}>
+            <TouchableOpacity activeOpacity={0.5} onPress={() => onChangeInput(!data)}>
               <Text
                 numberOfLines={1}
                 style={{
@@ -204,9 +196,17 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
             overflow: "hidden",
           }}
         >
-          <Text numberOfLines={10} style={{ padding: spacing * 0.5, marginHorizontal: spacing * 0.5 }}>
+          {typeof data != "undefined" && data != null && data != "" && (
+            <RenderHTML
+              html={data}
+              scrollEnabled={false}
+              containerStyle={{ ...StyleSheet.absoluteFillObject }}
+              padding={spacing}
+            />
+          )}
+          {/* <Text numberOfLines={10} style={{ padding: spacing * 0.5, marginHorizontal: spacing * 0.5 }}>
             {data}
-          </Text>
+          </Text> */}
           <LinearGradient
             colors={[Colors.background, Colors.background + "00"]}
             style={{ ...StyleSheet.absoluteFillObject }}
@@ -228,8 +228,25 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
               marginHorizontal: spacing,
             }}
           />
-          <EditorHTML />
+          <EditorHTML {...component} />
         </View>
+      );
+    }
+
+    if (component.type == "slider") {
+      return (
+        <Slider
+          value={value}
+          onValueChange={(e) => {
+            if (typeof onChange != "undefined") onChange(e);
+          }}
+          style={{ width: "100%", height: 40 }}
+          minimumValue={component.minimumValue}
+          maximumValue={component.maximumValue}
+          step={component.step}
+          minimumTrackTintColor={Colors.primary}
+          maximumTrackTintColor={Colors.card}
+        />
       );
     }
 
@@ -246,7 +263,7 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
         <TextInput
           onChangeText={onChangeInput}
           // textContentType="username"
-          defaultValue={ typeof data != 'undefined' && data != null ? data.toString():''}
+          defaultValue={typeof data != "undefined" && data != null ? data.toString() : ""}
           placeholder={
             typeof component.placeholder !== "undefined" && component.placeholder !== ""
               ? component.placeholder
@@ -254,10 +271,13 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
           }
           multiline={component.type === "textarea"}
           secureTextEntry={secureTextEntry}
+          scrollEnabled={component.type == "textarea" ? false : undefined}
           keyboardType={keyboardType}
           placeholderTextColor={Colors.gray}
           autoCapitalize={component.type === "email" || component.type === "password" ? "none" : undefined}
+          editable={component.active}
           size={component.size}
+          textContentType={component.textContentType}
           style={{
             flex: 1,
             paddingTop: component.type == "textarea" ? spacing * 1.2 : undefined,
@@ -273,7 +293,7 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
             activeOpacity={0.5}
             onPress={() => setSecureTextEntry((prevState) => !prevState)}
           >
-            <Icon family="Feather" name={secureTextEntry ? "eye-off" : "eye"} size={20} />
+            <Icon family="Feather" name={secureTextEntry ? "eye" : "eye-off"} size={20} />
           </TouchableOpacity>
         )}
         {typeof component.suffix != "undefined" && (
@@ -308,7 +328,9 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
         <View style={{ marginBottom: spacing, flexDirection: "row", alignItems: "center" }}>
           <Text bold numberOfLines={1}>
             {component.title}
+            {component.type == "slider" ? `: ${value}` : undefined}
           </Text>
+
           {(required == true || required == 1) && <Text style={{ color: Colors.danger }}> *</Text>}
         </View>
       )}

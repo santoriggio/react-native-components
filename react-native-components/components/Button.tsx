@@ -11,6 +11,7 @@ import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import { BottomSheetController } from "./BottomSheet";
 import { SearchPickerController } from "./SearchPicker";
 import triggerAction from "../functions/triggerAction";
+import { MessageController } from "./Message";
 
 function Button(props: ButtonProps) {
   const { loading = false, active = true, role = "primary", type = "filled", ...otherProps } = props;
@@ -22,7 +23,18 @@ function Button(props: ButtonProps) {
   }, [loading]);
 
   const onPress = async () => {
-    if (loadingState || active == false) return;
+    if (loadingState || active == false) {
+      if (active == false) {
+        MessageController.show({
+          type: "toast",
+          title: "Dati mancanti",
+          message: "Compila i dati mancanti per continuare",
+          role: "info",
+        });
+      }
+
+      return;
+    }
 
     if (typeof otherProps.action != "undefined") {
       return triggerAction(otherProps.action, undefined, (info) => {
@@ -50,7 +62,7 @@ function Button(props: ButtonProps) {
   }, [type, role]);
 
   const background = useMemo(() => {
-    if (type == "gray" || (typeof props.active != "undefined" && props.active == false)) {
+    if (type == "gray" || (typeof active != "undefined" && active == false)) {
       return Colors.gray;
     }
 

@@ -85,8 +85,6 @@ function EditorHTML({ ...props }: any) {
   const onPressAddImage = useCallback(() => {
     // insert URL
 
-
-
     richText.current?.insertImage(
       "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/100px-React-icon.svg.png"
     );
@@ -200,24 +198,24 @@ function EditorHTML({ ...props }: any) {
           richText.current?.sendAction(actions.setItalic, "result");
         },
       },
-      {
-        component: "text",
-        title: "Immagine",
-        icon: "image",
-        size: "l",
-        color: Colors.light.text,
-        margin: {
-          top: 1,
-          left: 1,
-        },
-        action: () => {
-          setSettingsVisible(false);
+      // {
+      //   component: "text",
+      //   title: "Immagine",
+      //   icon: "image",
+      //   size: "l",
+      //   color: Colors.light.text,
+      //   margin: {
+      //     top: 1,
+      //     left: 1,
+      //   },
+      //   action: () => {
+      //     setSettingsVisible(false);
 
-          // insertImage
+      //     // insertImage
 
-          // richText.current?.sendAction(actions.setItalic, "result");
-        },
-      },
+      //     // richText.current?.sendAction(actions.setItalic, "result");
+      //   },
+      // },
       // {
       //   component: "text",
       //   title: "Link",
@@ -326,6 +324,25 @@ function EditorHTML({ ...props }: any) {
           richText.current?.sendAction(actions.insertOrderedList, "result");
         },
       },
+
+      {
+        component: "text",
+        title: "Lista con checkbox",
+        icon: "checkmark",
+        size: "l",
+        color: Colors.light.text,
+        margin: {
+          top: 1,
+          left: 1,
+        },
+        action: () => {
+          setSettingsVisible(false);
+
+          // insertImage
+
+          richText.current?.sendAction(actions.checkboxList, "result");
+        },
+      },
       {
         component: "text",
         title: "Codice",
@@ -390,7 +407,14 @@ function EditorHTML({ ...props }: any) {
   }, []);
 
   return (
-    <Modal visible={visible} presentationStyle="formSheet" animationType="slide">
+    <Modal
+      visible={visible}
+      presentationStyle="formSheet"
+      animationType="slide"
+      onRequestClose={() => {
+        setVisible(false);
+      }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         keyboardVerticalOffset={top - spacing}
@@ -410,12 +434,12 @@ function EditorHTML({ ...props }: any) {
             // onLoadEnd={(e) => {
             //   richText.current?.blurContentEditor();
             // }}
-            placeholder="Scrivi qui"
+            placeholder={typeof props.placeholder != "undefined" ? props.placeholder : "Inserisci qui il testo..."}
             originWhitelist={["*"]}
             // androidHardwareAccelerationDisabled
             initialContentHTML={initialHtml}
             initialHeight={200}
-            initialFocus={false}
+            initialFocus={true}
             editorStyle={{
               placeholderColor: Colors.gray,
               caretColor: Colors.primary,
@@ -461,7 +485,14 @@ function EditorHTML({ ...props }: any) {
           fontSize={handleFontSize}
         />
       </KeyboardAvoidingView>
-      <Modal visible={settingsVisible} presentationStyle="formSheet" animationType="slide">
+      <Modal
+        visible={settingsVisible}
+        presentationStyle="formSheet"
+        animationType="slide"
+        onRequestClose={() => {
+          setSettingsVisible(false);
+        }}
+      >
         <Header
           left={
             <TouchableOpacity

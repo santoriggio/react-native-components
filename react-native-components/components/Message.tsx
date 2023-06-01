@@ -77,7 +77,12 @@ function Message({ ...props }: MessageProps) {
       }
 
       if (newMessage.type == "alert") {
-        Alert.alert(newMessage.title, newMessage.message, newMessage.buttons);
+        const formattedButtons =
+          typeof newMessage.buttons != "undefined" && Object.keys(newMessage.buttons).length > 0
+            ? newMessage.buttons
+            : undefined;
+        
+        Alert.alert(newMessage.title, newMessage.message, formattedButtons);
       }
     },
     hide: () => {

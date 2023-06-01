@@ -25,6 +25,12 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       structure,
       mergeParams = {},
       path,
+      emptyList = {
+        icon: "database",
+        title: "Ancora nulla",
+        subtitle: "Non esistono ancora dati in questa sezione",
+        content: [],
+      },
       handleErrors,
       onPressItem,
       onLongPressItem,
@@ -57,7 +63,6 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
 
     useEffect(() => {
       const listener = AppSettings.addListener("refresh", (x) => {
-      
         const module_id = typeof merged["module_id"] != "undefined" ? merged["module_id"] : undefined;
 
         if (typeof module_id != "undefined" && typeof x != "undefined" && typeof x[module_id] != "undefined") {
@@ -80,9 +85,13 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
 
     useImperativeHandle(ref, () => ({
       scrollToEnd(params?) {
+        if (typeof currentFlatlist.current == "undefined") return;
+
         currentFlatlist.current.scrollToEnd(params);
       },
       scrollToIndex(params) {
+        if (typeof currentFlatlist.current == "undefined") return;
+
         currentFlatlist.current.scrollToIndex(params);
       },
       refresh,
@@ -110,7 +119,14 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       loadMore();
     }, [hasMore]);
 
-    const keyExtractor = (item: any, index: number) => index.toString();
+    const keyExtractor = (item: any, index: number) => {
+      let toReturn = index + "-";
+      if (typeof item.id != "undefined" && item.id != null && item.id != "") {
+        toReturn = toReturn + item.id;
+      }
+
+      return toReturn;
+    };
 
     if (typeof data == "undefined" && isLoading) {
       return <Loading skeletonPlaceholder={props.skeletonPlaceholder} />;
@@ -125,7 +141,16 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
     }
 
     if (data.length == 0) {
-      return <NoData icon="database" onRefresh={refresh} refreshing={refreshing} />;
+      return (
+        <NoData
+          icon={emptyList.icon}
+          title={emptyList.title}
+          subtitle={emptyList.subtitle}
+          onRefresh={refresh}
+          refreshing={refreshing}
+          content={emptyList.content}
+        />
+      );
     }
 
     const renderItem = ({ item, index }: any) => {

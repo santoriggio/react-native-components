@@ -1,4 +1,5 @@
 import { MessageController } from "../components/Message";
+import { Share } from "react-native";
 import { Action, ApiAction, ListenerAction, PickerAction, PopupAction } from "../types";
 import keyExist from "./keyExist";
 import sendApiRequest from "./sendApiRequest";
@@ -78,6 +79,10 @@ async function triggerAction<T>(
             }
           }
 
+          if (typeof action.callback != "undefined") {
+            action.callback(apiAction);
+          }
+
           // if (typeof callback != "undefined") {
           //   //callback exist
           //   triggerAction(callback);
@@ -109,6 +114,10 @@ async function triggerAction<T>(
       case "picker":
         const picker = keyExist<PickerAction["picker"]>(action.picker, "isString");
 
+        if (typeof picker == "undefined" || picker == "close") {
+          return SearchPickerController.hide();
+        }
+
         if (typeof picker != "undefined") {
           if (picker == "flag") {
             FlagPickerController.show({
@@ -116,32 +125,37 @@ async function triggerAction<T>(
             });
           }
 
-          if (picker == "search") {
-            SearchPickerController.show({
-              tabs: action.tabs,
-              //@ts-ignore
-              data: action.data,
-              //@ts-ignore
-              footer: action.footer,
-              content: action.content,
-            });
-          }
-        } else {
-          SearchPickerController.hide();
+          SearchPickerController.show({
+            type: picker,
+            tabs: action.tabs,
+            //@ts-ignore
+            data: action.data,
+            //@ts-ignore
+            footer: action.footer,
+            content: action.content,
+          });
         }
+
         break;
       case "popup":
         const content = keyExist<PopupAction["content"]>(action.content, "isArray");
-        if (typeof content != "undefined") BottomSheetController.show(content);
 
         if (Object.keys(action).length == 1 && typeof content == "undefined") {
           BottomSheetController.hide();
         }
 
+        if (typeof content != "undefined") BottomSheetController.show(content);
+
         break;
       case "message":
         MessageController.show(action.message);
         break;
+      case "share":
+        if (typeof action.message != "undefined" && action.message != "") {
+          Share.share({
+            message: action.message,
+          });
+        }
     }
   }
 }

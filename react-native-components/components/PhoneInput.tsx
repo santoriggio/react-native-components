@@ -8,6 +8,7 @@ import { Flags } from "../utils/Flags";
 import Flag, { CountryCode } from "./Flag";
 import TextInput from "./TextInput";
 import FlagPicker, { FlagPickerController } from "./FlagPicker";
+import { SearchPickerController } from "./SearchPicker";
 // import { navigationRef } from "../utils/RootNavigation";
 
 interface IProps {
@@ -78,13 +79,14 @@ const PhoneInput: FC<IProps> = ({ value, size, onChange, input_container_style }
       }}
     >
       <TouchableOpacity
-        style={{ paddingHorizontal: spacing,paddingRight:0 }}
+        style={{ paddingHorizontal: spacing, paddingRight: 0 }}
         hitSlop={{
           bottom: spacing,
           top: spacing,
         }}
         onPress={() => {
-          FlagPickerController.show({
+          SearchPickerController.show({
+            type: "flag",
             onSuccess: (result: any) => {
               setActualFlag((prevFlag: any) => {
                 setPhoneText((prevPhoneText) => {

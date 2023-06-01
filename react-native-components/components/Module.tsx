@@ -4,10 +4,12 @@ import sendApiRequest from "../functions/sendApiRequest";
 import useLayout from "../hooks/useLayout";
 import { ModuleProps } from "../types";
 import Button from "./Button";
+import Icon from "./Icon";
 import ListItem from "./ListItem";
 import { SearchPickerController } from "./SearchPicker";
 import Text from "./Text";
 
+import triggerAction from "../functions/triggerAction";
 function Module({
   required = false,
   limit = 1,
@@ -51,13 +53,23 @@ function Module({
       return;
     }
 
-    const apiResult = await sendApiRequest("/modules/records", { module_id: module, id: value });
+    const apiResult = await sendApiRequest("/modules/records", {
+      module_id: module,
+      id: value,
+      params: { global, ...props.params },
+    });
 
     if (typeof apiResult.error != "undefined") {
       return;
     }
 
     const record = apiResult.data.data;
+
+    record.forEach((x) => {
+      if (typeof x.action != "undefined") {
+        triggerAction(x.action);
+      }
+    });
 
     setData(record);
   };
@@ -66,6 +78,7 @@ function Module({
     SearchPickerController.show({
       type: "modulepicker",
       module_id: module,
+      global,
       limit,
       content: [
         {
@@ -74,7 +87,7 @@ function Module({
           path: "data/data",
           params: {
             module_id: module,
-            params: { global },
+            params: { global, ...props.params },
           },
         },
       ],
@@ -118,7 +131,36 @@ function Module({
       {typeof data != "undefined" && data != null && Object.keys(data).length > 0 ? (
         data.map((x, id) => {
           if (typeof x.content != "undefined") {
-            return <ListItem key={id} {...x} onPress={openPicker} selected={undefined} />;
+            return (
+              <ListItem
+                key={id}
+                {...x}
+                onPress={openPicker}
+                selected={undefined}
+                screenDrawerStyle={{
+                  borderRadius: radius,
+                  borderWidth: 1,
+                  marginTop: 0,
+                }}
+                right={
+                  <View style={{}}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setData(undefined);
+                        onChange(undefined);
+                      }}
+                      activeOpacity={0.5}
+                      style={{ padding: spacing }}
+                    >
+                      <Icon name="trash-outline" color={Colors.danger} size={icon_size} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={openPicker} activeOpacity={0.5} style={{ padding: spacing }}>
+                      <Icon name="swap" size={icon_size} />
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
+            );
           }
         })
       ) : (

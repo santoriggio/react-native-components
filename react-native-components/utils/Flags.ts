@@ -255,6 +255,11 @@ export const CountryCodeList = [
 
 export const Flags: FlagType[] = [
   {
+    name: "Italia",
+    dial_code: "+39",
+    code: "IT",
+  },
+  {
     name: "Afghanistan",
     dial_code: "+93",
     code: "AF",
@@ -773,11 +778,6 @@ export const Flags: FlagType[] = [
     name: "Israel",
     dial_code: "+972",
     code: "IL",
-  },
-  {
-    name: "Italy",
-    dial_code: "+39",
-    code: "IT",
   },
   {
     name: "Jamaica",

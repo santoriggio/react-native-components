@@ -14,7 +14,7 @@ import useLayout from "../hooks/useLayout";
 import { SkeletonPlaceholderComponent, SkeletonPlaceholderProps } from "../types";
 
 function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
-  const { spacing, icon_size, radius, Colors } = useLayout();
+  const { spacing, radius, Colors } = useLayout();
   const animatedValue = useSharedValue(0);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
     };
   });
 
-  const bg = "#f3f3f3";
+  const bg = Colors.isDark ? Colors.secondary : "#f3f3f3";
 
   return (
     <View style={{ opacity: 0.6, flexDirection: "row", flexWrap: "wrap", padding: spacing * 0.5, ...props.style }}>
@@ -63,7 +63,7 @@ function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
               >
                 <View
                   style={{
-                    backgroundColor: "#ecebeb",
+                    backgroundColor: Colors.isDark ? Colors.card : "#ecebeb",
                     overflow: "hidden",
                     ...customStyle(component),
                   }}
@@ -92,7 +92,7 @@ function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
           >
             <View
               style={{
-                backgroundColor: "#ecebeb",
+                backgroundColor: Colors.isDark ? Colors.card : "#ecebeb",
                 overflow: "hidden",
                 width: (typeof component.size !== "undefined" ? component.size : 100) + "%",
                 ...customStyle(component),
@@ -101,7 +101,7 @@ function SkeletonPlaceholder({ ...props }: SkeletonPlaceholderProps) {
               <Animated.View style={[rStyle, { height: "100%", width: "100%" }]}>
                 <LinearGradient
                   style={{ position: "absolute", bottom: 0, top: 0, left: 0, right: 0 }}
-                  colors={["#f3f3f300", "#f3f3f380", "#f3f3f3", "#f3f3f380", "#f3f3f300"]}
+                  colors={[bg + "00", bg + "40", bg + "80", bg, bg, bg + "80", bg + "40", bg + "00"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 />

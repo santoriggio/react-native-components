@@ -75,7 +75,7 @@ const sendApiRequest = async (
   if (typeof json.error != "undefined") {
     if (typeof currentConfig.sendApiRequest.errors != "undefined") {
       if (typeof currentConfig.sendApiRequest.errors[json.error] != "undefined") {
-        currentConfig.sendApiRequest.errors[json.error](json.error);
+        currentConfig.sendApiRequest.errors[json.error](json);
       }
     }
 

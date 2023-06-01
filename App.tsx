@@ -1,6 +1,7 @@
 import { memo, StrictMode, useEffect, useMemo, useRef, useState } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View, useWindowDimensions, Platform, Dimensions, Keyboard, KeyboardAvoidingView } from "react-native";
 import {
   useLayout,
   FlagPicker,
@@ -13,6 +14,7 @@ import {
   TabNavigation,
   ScreenDrawer,
   Text,
+  TextInput,
 } from "./react-native-components";
 
 config.setConfig({
@@ -39,10 +41,54 @@ config.setConfig({
   },
 });
 
+const { height: windowHeight } = Dimensions.get("window");
+
+const NestedScrollFix = ({ children }: any) => {
+  const scrollViewRef = useRef<any>(null);
+  const contentSizeRef = useRef({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (event) => {
+        if (scrollViewRef.current) {
+          const keyboardHeight = event.endCoordinates.height;
+          const keyboardY = windowHeight - keyboardHeight;
+          const { height: contentHeight } = contentSizeRef.current;
+
+          if (contentHeight > keyboardY) {
+            const scrollOffset = contentHeight - keyboardY;
+            scrollViewRef.current.scrollTo({ y: scrollOffset, animated: true });
+          }
+        }
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
+  const handleContentSizeChange = (width, height) => {
+    contentSizeRef.current = { width, height };
+  };
+
+  return (
+    <ScrollView
+      ref={scrollViewRef}
+      keyboardShouldPersistTaps="always"
+      contentContainerStyle={{ flexGrow: 1 }}
+      onContentSizeChange={handleContentSizeChange}
+    >
+      {children}
+    </ScrollView>
+  );
+};
+
 export default function App() {
   const { Colors } = useLayout();
   const isLoadingComplete = useCachedResources();
-
+  const { width } = useWindowDimensions();
   const [query, setQuery] = useState<string>("");
 
   const [filters, setFilters] = useState<any>({});
@@ -70,52 +116,75 @@ export default function App() {
             setSelectedFilters,
           }}
         />
-        <Text>{JSON.stringify(canContinue)}</Text>
+
         <TabNavigation
           data={data}
           setData={setData}
           tabs={[
             {
               id: "first",
-              title: "Primo",
               path: "/first",
+              title: "Primo",
               content: [
                 {
-                  id: "in",
+                  id: "check",
                   component: "input",
-                  type: "text",
-                  required: true,
-                  title: "Input",
+                  type: "checkbox",
+                  placeholder: "Clicca qui",
+                  trigger: {
+                    target: ["box"],
+                  },
                 },
-              ],
-            },
-            {
-              id: "second",
-              path: "/second",
-              title: "Secondo",
-              content: [
                 {
-                  id: "in",
+                  id: "test",
                   component: "input",
                   type: "text",
-                  required: true,
-                  title: "Input",
+                  title: "INPUT CON ID",
+                },
+                {
+                  id: "box",
+                  component: "box",
+                  title: "OOOO chist u box è",
+                  content: [
+                    {
+                      component: "select",
+                      type: "multiselect",
+                      items: {
+                        0: {
+                          text: "ooo",
+                        },
+                        1: {
+                          text: "ooo2",
+                        },
+                        1: {
+                          text: "oo03",
+                        },
+                      },
+                      title: "SELECT",
+                    },
+                  ],
+                },
+                {
+                  component: "input",
+                  type: "text",
+                  title: "INput",
+                },
+                {
+                  component: "input",
+                  type: "text",
+                  title: "INput",
+                },
+                {
+                  component: "input",
+                  type: "text",
+                  title: "INput",
+                },
+                {
+                  component: "input",
+                  type: "text",
+                  title: "INput",
                 },
               ],
-            },
-          ]}
-          onChange={(details) => {
-            setCanContinue(details.canContinue);
-          }}
-        />
-
-        <ScreenDrawer
-          canContinue={canContinue}
-          content={[
-            {
-              component: "button",
-              checkData: true,
-              title: "Hey",
             },
           ]}
         />

@@ -21,6 +21,10 @@ import Select from "./Select";
 import triggerAction from "../functions/triggerAction";
 import ButtonsList from "./ButtonsList";
 import Bullet from "./Bullet";
+import AppSettings from "../utils/AppSettings";
+import deepMerge from "../functions/deepMerge";
+import { color } from "react-native-reanimated";
+import getColor from "../functions/getColor";
 
 interface I {
   data?: any;
@@ -181,7 +185,14 @@ const RenderComponent = memo(({ component, ...props }: I) => {
     case "text":
       const filled = typeof component.type != "undefined" && component.type == "filled";
 
-      const textColor = typeof component.color != "undefined" ? component.color : Colors.text;
+      const textColor =
+        typeof component.color != "undefined" && component.color != null
+          ? getColor(component.color, Colors)
+          : Colors.text;
+      const subtitleColor =
+        typeof component.subtitleColor != "undefined" && component.subtitleColor != null
+          ? getColor(component.subtitleColor, Colors)
+          : Colors.gray;
 
       return (
         <TouchableOpacity
@@ -200,9 +211,13 @@ const RenderComponent = memo(({ component, ...props }: I) => {
             flexDirection: "row",
             alignItems: "center",
             backgroundColor:
-              typeof component.bgColor != "undefined" ? component.bgColor : filled ? component.color : undefined,
-            paddingHorizontal: filled ? spacing * 0.4 : undefined,
-            paddingVertical: filled ? spacing * 0.2 : undefined,
+              typeof component.bgColor != "undefined" && component.bgColor != null
+                ? getColor(component.bgColor, Colors)
+                : filled
+                ? component.color
+                : undefined,
+            paddingHorizontal: filled ? spacing : undefined,
+            paddingVertical: filled ? spacing * 0.6 : undefined,
             borderRadius: radius * 0.6,
             ...customStyle,
           }}
@@ -211,7 +226,7 @@ const RenderComponent = memo(({ component, ...props }: I) => {
             <Icon
               family="Feather"
               name={component.icon}
-              color={textColor == "light" ? Colors.gray : textColor}
+              color={textColor}
               style={{ width: icon_size, textAlign: "center", marginRight: spacing }}
             />
           )}
@@ -231,13 +246,13 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                 numberOfLines={typeof component.numberOfLines != "undefined" ? component.numberOfLines : 1}
                 bold={component.bold}
                 size={component.size}
-                style={[{ color: textColor == "light" ? Colors.gray : textColor }, component.style]}
+                style={[{ color: textColor }, component.style]}
               >
                 {component.title}
               </Text>
             )}
             {typeof component.subtitle != "undefined" && component.subtitle != "" && (
-              <Text numberOfLines={1} size="s" style={{ color: filled ? "white" : Colors.gray }}>
+              <Text numberOfLines={1} size="s" style={{ color: subtitleColor }}>
                 {component.subtitle}
               </Text>
             )}
@@ -338,6 +353,74 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
 
   const [canContinue, setCanContinue] = useState<boolean>(false);
 
+  const prevData = useRef<any>({});
+
+  const firstRender = useRef<boolean>(true);
+
+  useEffect(() => {
+    const data = typeof props.data != "undefined" && props.data != null ? props.data : {};
+
+    props.content?.forEach((comp) => {
+      if (comp.component == "box") {
+        const box_data = typeof comp.id != "undefined" && typeof data[comp.id] != "undefined" ? data[comp.id] : data;
+        const prev_box_data =
+          typeof comp.id != "undefined" && typeof prevData.current[comp.id] != "undefined"
+            ? prevData.current[comp.id]
+            : prevData.current;
+
+        comp.content.forEach((boxC) => {
+          const value =
+            typeof boxC.id != "undefined" &&
+            typeof box_data != "undefined" &&
+            box_data != null &&
+            typeof box_data[boxC.id] != "undefined"
+              ? box_data[boxC.id]
+              : undefined;
+          const prevValue =
+            typeof boxC.id != "undefined" &&
+            typeof prev_box_data != "undefined" &&
+            prev_box_data != null &&
+            typeof prev_box_data[boxC.id] != "undefined"
+              ? prev_box_data[boxC.id]
+              : undefined;
+
+          if (firstRender.current || (value != prevValue && typeof comp.trigger != "undefined")) {
+            triggerComponent(boxC.trigger, value, comp.id);
+          }
+        });
+      } else {
+        const value = typeof comp.id != "undefined" && typeof data[comp.id] != "undefined" ? data[comp.id] : undefined;
+        const prevValue =
+          typeof comp.id != "undefined" && typeof prevData.current[comp.id] != "undefined"
+            ? prevData.current[comp.id]
+            : undefined;
+
+        // if (typeof comp.trigger != "undefined") console.log({ value, prevValue });
+
+        if (firstRender.current || (value != prevValue && typeof comp.trigger != "undefined")) {
+          triggerComponent(comp.trigger, value);
+        }
+      }
+    });
+
+    firstRender.current = false;
+    prevData.current = { ...data };
+  }, [JSON.stringify(props.data)]);
+
+  useEffect(() => {
+    if (typeof props.setData != "undefined") {
+      const listener = AppSettings.addListener("onChangeData", (newData) => {
+        if (typeof props.setData != "undefined") {
+          props.setData((prevState: any) => {
+            return deepMerge(prevState, newData);
+          });
+        }
+      });
+
+      return () => listener.remove();
+    }
+  }, [JSON.stringify(props.setData)]);
+
   useEffect(() => {
     if (typeof props.canContinue != "undefined") {
       setCanContinue(props.canContinue);
@@ -382,9 +465,6 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
           return { ...prevState, ...toReturn };
         });
       }
-
-      //@ts-ignore the control exist in the function "triggerComponent"
-      triggerComponent(component.trigger, newValue, box_id);
     },
     [JSON.stringify(props.path)]
   );
@@ -392,8 +472,10 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   const shouldRender = useCallback(
     (component: any, box_id?: string) => {
       let toReturn = true;
+
       if (typeof hiddenComponents != "undefined" && Array.isArray(hiddenComponents)) {
         let path = "";
+
         if (typeof component.id != "undefined") {
           path = component.id;
         }
@@ -401,6 +483,8 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
         if (typeof box_id != "undefined") {
           path = `${box_id}/${component.id}`;
         }
+
+        // console.log(hiddenComponents, path, !hiddenComponents.includes(path))
 
         if (hiddenComponents.includes(path)) toReturn = false;
       }
@@ -420,9 +504,34 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     props.content.forEach((field) => {
       if (field.component == "text") return;
 
+      if (field.component == "box") {
+        //
+
+        field.content.forEach((x) => {
+          //@ts-ignore It's ok, but not for Typescript
+          if (x.required && x.id) {
+            const x_data = props.data[x.id];
+
+            if (typeof x_data == "undefined" || x_data.toString().trim() == "") {
+              canContinue = false;
+            }
+          }
+        });
+      }
+
       //@ts-ignore It's ok, but not for Typescript
       if (field.required && field.id) {
-        const field_data = props.data[field.id];
+        let field_data = props.data[field.id];
+
+        if (typeof field_data == "string") {
+          const prefix = field_data[0];
+
+          if (prefix == '"') {
+            //is JSON
+
+            field_data = JSON.parse(field_data);
+          }
+        }
 
         if (typeof field_data == "undefined" || field_data.toString().trim() == "") {
           canContinue = false;
@@ -462,7 +571,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
 
       if (Array.isArray(trigger.target) && trigger.target.length > 0) {
         setHiddenComponents((prevState) => {
-          let toReturn = prevState;
+          let toReturn = [...prevState];
 
           trigger.target.forEach((trg: string) => {
             let path = typeof box_id != "undefined" ? `${box_id}/${trg}` : trg;
@@ -474,6 +583,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
             }
           });
 
+          // alert(JSON.stringify(toReturn))
           return toReturn;
         });
       }
@@ -530,8 +640,8 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     );
   }
 
-  return (
-    <ScrollView scrollEnabled={props.scrollEnabled} {...props.scrollViewProps}>
+  if (typeof props.hasScroll != "undefined" && props.hasScroll == false) {
+    return (
       <View
         style={{ flexDirection: "row", flexWrap: "wrap", padding: hasMargin ? spacing / 2 : undefined, ...props.style }}
       >
@@ -605,6 +715,121 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                 </Accordion>
               );
             }
+
+            const value =
+              typeof component.id != "undefined" && typeof data[component.id] != "undefined"
+                ? data[component.id]
+                : undefined;
+
+            if (shouldRender(component)) {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    width: (typeof component.windowSize !== "undefined" ? component.windowSize : 100) + "%",
+                    padding: hasMargin ? spacing / 2 : undefined,
+                    marginBottom: hasMargin ? spacing * 0.5 : undefined,
+                  }}
+                >
+                  <RenderComponent
+                    // data={drillProps ? props.data : undefined}
+                    value={value}
+                    component={component}
+                    onChange={onChange}
+                    canContinue={
+                      component.component == "button" &&
+                      typeof component.checkData != "undefined" &&
+                      component.checkData == true
+                        ? canContinue
+                        : undefined
+                    }
+                  />
+                </View>
+              );
+            }
+
+            return null;
+          })}
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView keyboardShouldPersistTaps="handled" scrollEnabled={props.scrollEnabled} {...props.scrollViewProps}>
+      <View
+        style={{ flexDirection: "row", flexWrap: "wrap", padding: hasMargin ? spacing / 2 : undefined, ...props.style }}
+      >
+        {typeof props.content != "undefined" &&
+          props.content.length > 0 &&
+          Array.isArray(props.content) &&
+          props.content.map((component, index) => {
+            const data = typeof props.data != "undefined" && props.data != null ? props.data : {};
+
+            if (shouldRender(component) && component.component == "box") {
+              const box_data =
+                typeof component.id != "undefined" && typeof data[component.id] != "undefined"
+                  ? data[component.id]
+                  : data;
+
+              return (
+                <Accordion
+                  key={index}
+                  bold
+                  size="xl"
+                  {...component}
+                  style={{
+                    // flex: typeof component.windowSize != "undefined" && component.windowSize == "flex" ? 1 : undefined,
+                    marginHorizontal: spacing * 0.5,
+                    marginBottom: spacing,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      padding: spacing / 2,
+                    }}
+                  >
+                    {component.content.length > 0 &&
+                      component.content.map((box_component, box_index) => {
+                        if (shouldRender(box_component, component.id)) {
+                          const value =
+                            typeof box_component.id != "undefined" &&
+                            typeof box_data != "undefined" &&
+                            box_data != null &&
+                            typeof box_data[box_component.id] != "undefined"
+                              ? box_data[box_component.id]
+                              : undefined;
+
+                          return (
+                            <View
+                              key={box_index}
+                              style={{
+                                width:
+                                  (typeof box_component.windowSize !== "undefined" ? box_component.windowSize : 100) +
+                                  "%",
+                                padding: spacing / 2,
+                              }}
+                            >
+                              <RenderComponent
+                                // data={drillProps ? props.data : undefined}
+                                value={value}
+                                component={box_component}
+                                onChange={onChange}
+                                box_id={component.id}
+                                parent={component}
+                              />
+                            </View>
+                          );
+                        }
+
+                        return null;
+                      })}
+                  </View>
+                </Accordion>
+              );
+            }
+
             const value =
               typeof component.id != "undefined" && typeof data[component.id] != "undefined"
                 ? data[component.id]

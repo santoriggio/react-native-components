@@ -25,6 +25,31 @@ export type ConfigOptions = {
       [key: string]: (error: any) => void;
     };
   };
+  colors: {
+    light?: {
+      isDark: false;
+      text: string;
+      card: string;
+      background: string;
+      border: string;
+    };
+    dark?: {
+      isDark: true;
+      text: string;
+      card: string;
+      background: string;
+      border: string;
+    };
+    primary?: string;
+    secondary?: string;
+    success?: string;
+    danger?: string;
+    notification?: string;
+    info?: string;
+    link?: string;
+    warning?: string;
+    gray?: string;
+  };
   googlePlacesAutocompleteKey: string;
 };
 
@@ -46,6 +71,31 @@ class Config {
       },
       images: {
         icon: undefined,
+      },
+      colors: {
+        light: {
+          isDark: false,
+          text: "#000",
+          card: "#fafafa",
+          background: "#FFFFFF",
+          border: "#e7eaec",
+        },
+        dark: {
+          isDark: true,
+          text: "#fff",
+          card: "#00151c",
+          background: "#001921",
+          border: "#001217",
+        },
+        primary: "#1ab394",
+        secondary: "#00151c",
+        success: "#4cd964",
+        danger: "#FF3B30",
+        notification: "rgb(255, 69, 58)",
+        info: "#0A84FF",
+        link: "#0000EE",
+        warning: "#ffcc00",
+        gray: "#888",
       },
       googlePlacesAutocompleteKey: "",
     };

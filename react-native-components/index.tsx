@@ -17,6 +17,7 @@ export { default as TextInput } from "./components/TextInput";
 export { default as ScreenDrawer } from "./components/ScreenDrawer";
 export { default as Slider } from "./components/Slider";
 export { default as Loading } from "./components/Loading";
+export { default as RenderHTML } from "./components/RenderHTML";
 export { default as Accordion } from "./components/Accordion";
 export { default as FlagPicker, FlagPickerController } from "./components/FlagPicker";
 export { default as BottomSheet, BottomSheetController } from "./components/BottomSheet";
@@ -37,6 +38,7 @@ export { default as config } from "./utils/Config";
 export { default as Graph } from "./components/Graph";
 export { default as pickMedia } from "./functions/pickMedia";
 export { default as Bullet } from "./components/Bullet";
+export { default as getColor } from "./functions/getColor";
 //TYPES
 export type {
   FlatListProps,

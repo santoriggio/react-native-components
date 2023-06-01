@@ -39,12 +39,20 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
       <View
         style={{
           height: typeof props.height != "undefined" ? props.height : undefined,
-          width: sliderWidth,
+          width: sliderWidth - 2,
         }}
       >
-        {props.renderItem}
+        {props.renderItem(item, index)}
       </View>
     );
+  };
+
+  const keyExtractor = (item: any, index: number) => {
+    if (typeof item.id != "undefined") {
+      return `${item.id}_${index}`;
+    }
+
+    return index;
   };
 
   return (
@@ -65,7 +73,7 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
       ) : (
         <FlatList
           data={props.data}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={keyExtractor}
           renderItem={renderItem}
           horizontal
           bounces={false}

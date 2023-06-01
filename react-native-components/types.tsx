@@ -13,16 +13,9 @@ import {
   ColorValue,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import SkeletonPlaceholder from "./components/SkeletonPlaceholder";
 import { ScreenDrawerComponent } from "./ScreenDrawerTypes";
 import { ImageProps as DefaultImageProps } from "expo-image";
 import { sizes } from "./utils/Utils";
-
-/*
-
-
-
-*/
 
 type CustomFlatListProps = {
   ref?: MutableRefObject<DefaultFlatList<any>>;
@@ -37,6 +30,11 @@ type CustomFlatListProps = {
   scrollX?: any;
   skeletonPlaceholder?: SkeletonPlaceholderProps["components"];
   unread?: (string | number)[];
+  emptyList?: {
+    icon?: string;
+    title?: string;
+    subtitle?: string;
+  };
   handleErrors?: {
     [key: string]: {
       title?: string;
@@ -110,6 +108,7 @@ export type NoDataProps = {
   title?: string;
   subtitle?: string;
   icon?: string;
+  content?: ScreenDrawerComponent[];
   refreshing?: boolean;
   onRefresh?: () => void;
   contentContainerStyle?: ViewStyle;
@@ -235,7 +234,8 @@ export interface InputProps {
     | "email"
     | "password"
     | "textarea"
-    | "html";
+    | "html"
+    | "slider";
 
   link?: string;
   size?: keyof typeof sizes;
@@ -243,6 +243,8 @@ export interface InputProps {
   value?: any;
   onChange?: (newValue: any) => void;
   box_id?: string;
+  active?: boolean;
+  textContentType?: DefaultTextInputProps["textContentType"];
   suffix?: {
     text?: string;
     icon?: string;
@@ -349,6 +351,7 @@ export type ModuleProps = {
   placeholder?: string;
   required?: boolean | 1 | 0;
   limit?: number;
+  params?: any;
   icon?: string;
   global?: boolean | 0 | 1;
 };
@@ -515,13 +518,21 @@ export type ListenerAction = {
 
 export type PickerAction = {
   type: "picker";
-  picker: "flag" | "search"; // flag, module, module_id cart type ['buyable', 'coupon']
+  picker: "flag" | "search" | "close"; // flag, module, module_id cart type ['buyable', 'coupon']
   content: ScreenDrawerComponent[];
   callback?: Action<any>;
 };
 
 export type ShareAction = {
+  type: "share";
+  message: string;
+};
 
-}
-
-export type Action<T> = ((details?: T) => void) | LinkAction | ApiAction | PopupAction | ListenerAction | PickerAction;
+export type Action<T> =
+  | ((details?: T) => void)
+  | LinkAction
+  | ApiAction
+  | PopupAction
+  | ListenerAction
+  | PickerAction
+  | ShareAction;

@@ -33,8 +33,11 @@ function ListItem({ ...props }: any) {
   };
 
   const onLongPress = () => {
-    if (typeof props.action != "undefined") {
-      triggerAction(props.action, props);
+    if (typeof props.longPressAction != "undefined") {
+      triggerAction(props.longPressAction, props);
+
+      if (typeof props.longPressAction.preventDefault != "undefined" && props.longPressAction.preventDefault == true)
+        return;
     }
 
     if (typeof props.onLongPress != "undefined") {
@@ -55,7 +58,7 @@ function ListItem({ ...props }: any) {
       )}
 
       {typeof props.unread != "undefined" && (
-        <Bullet color={props.unread ? "info" : "transparent"} style={{ marginHorizontal: spacing * 0.8 }} />
+        <Bullet color={props.unread ? "info" : undefined} style={{ marginHorizontal: spacing * 0.8 }} />
       )}
 
       <ScreenDrawer
@@ -65,9 +68,12 @@ function ListItem({ ...props }: any) {
           marginLeft: typeof props.unread != "undefined" ? -spacing : undefined,
           borderBottomWidth: 1,
           borderColor: Colors.border,
+          ...props.screenDrawerStyle,
         }}
         scrollEnabled={false}
       />
+
+      {typeof props.right != "undefined" && props.right}
     </AnimatedTouchableOpacity>
   );
 }

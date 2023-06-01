@@ -37,6 +37,7 @@ import ScreenDrawer from "./ScreenDrawer";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import { FlagPickerController } from "./FlagPicker";
 import { SearchPickerController } from "./SearchPicker";
+import { Keyboard } from "react-native";
 
 type BottomSheetMethods = {
   show: (newContent: ScreenDrawerComponent[]) => void;
@@ -117,6 +118,8 @@ const BottomSheet: FC = () => {
 
       setContent(newContent);
     }
+
+    Keyboard.dismiss();
 
     setVisible(true);
     bottomSheetRef.current?.snapToIndex(0);

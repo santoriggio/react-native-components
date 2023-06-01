@@ -10,6 +10,7 @@ import Flag from "./Flag";
 import { Flags } from "../utils/Flags";
 import { FlagPickerController } from "./FlagPicker";
 import { validatePhoneNumberLength } from "libphonenumber-js";
+import { SearchPickerController } from "./SearchPicker";
 type Selected = string | string[] | undefined;
 
 function Select(props: SelectProps) {
@@ -58,7 +59,7 @@ function Select(props: SelectProps) {
     let toReturn: string = placeholder;
 
     if (typeof selectedItem != "undefined") {
-      if (typeof selectedItem == "object" && Array.isArray(selectedItem)) {
+      if (typeof selectedItem == "object" && Array.isArray(selectedItem) && selectedItem.length > 0) {
         let formatted: string[] = [];
 
         selectedItem.forEach((str, id) => {
@@ -72,7 +73,9 @@ function Select(props: SelectProps) {
         });
 
         toReturn = formatted.join(", ");
-      } else {
+      }
+
+      if (typeof selectedItem != "object") {
         const item = typeof items[selectedItem] != "undefined" ? items[selectedItem] : undefined;
 
         if (typeof item == "undefined") {
@@ -104,8 +107,9 @@ function Select(props: SelectProps) {
       {type == "state" ? (
         <TouchableOpacity
           onPress={() => {
-            FlagPickerController.show({
-              onSuccess: (flag) => {
+            SearchPickerController.show({
+              type: "flag",
+              onSuccess: (flag: any) => {
                 setSelectedItem(flag.name);
               },
             });
@@ -122,7 +126,7 @@ function Select(props: SelectProps) {
           }}
         >
           <Flag countryCode={typeof selectedItem != "undefined" && flag.length > 0 ? flag[0].code : "IT"} />
-          <Text style={{ width: 100, marginLeft: spacing }}>{selectedItem}</Text>
+          <Text numberOfLines={1} style={{ marginLeft: spacing }}>{selectedItem}</Text>
         </TouchableOpacity>
       ) : (
         <Accordion ref={accordion} title={accordionTitle}>
@@ -163,7 +167,7 @@ function Select(props: SelectProps) {
               if (typeof otherProps.onChange == "function") {
                 otherProps.onChange(toReturn as any);
               }
-              
+
               setSelectedItem(toReturn);
             };
 
@@ -188,6 +192,7 @@ function Select(props: SelectProps) {
                     alignItems: "center",
                     padding: spacing,
                     backgroundColor: filled ? item.color : undefined,
+
                   }}
                 >
                   {type == "multiselect" && <Checkbox isChecked={isSelected(key)} style={{ marginRight: spacing }} />}
@@ -202,7 +207,7 @@ function Select(props: SelectProps) {
                       }}
                     />
                   )}
-                  <Text style={{ color: textColor }}>{typeof item == "object" ? item.text : item}</Text>
+                  <Text numberOfLines={1} style={{flex:1, color: textColor,  }}>{typeof item == "object" ? item.text : item}</Text>
                 </TouchableOpacity>
               );
             }

@@ -38,23 +38,6 @@ interface LayoutConfig {
   };
 }
 
-const theme = {
-  light: {
-    isDark: false,
-    text: "#000",
-    card: "#fafafa",
-    background: "#FFFFFF",
-    border: "#e7eaec",
-  },
-  dark: {
-    isDark: true,
-    text: "#fff",
-    card: "#00151c",
-    background: "#001921",
-    border: "#001217",
-  },
-};
-
 const useLayout = (): LayoutConfig => {
   const colorScheme = useColorScheme();
   const currentConfig = config.getConfig();
@@ -62,6 +45,12 @@ const useLayout = (): LayoutConfig => {
   const layoutConfig = useMemo<LayoutConfig>(() => {
     const { width, height } = Dimensions.get("window");
     const isTablet = width > 600 && height > 600;
+
+    const theme = {
+      light: currentConfig.colors.light,
+      dark: currentConfig.colors.dark,
+    };
+
     const currentTheme = theme[colorScheme];
 
     return {
@@ -79,15 +68,15 @@ const useLayout = (): LayoutConfig => {
         ...currentTheme,
         light: theme["light"],
         dark: theme["dark"],
-        primary: "#1ab394",
-        secondary: "#00151c",
-        success: "#4cd964",
-        danger: "#FF3B30",
-        notification: "rgb(255, 69, 58)",
-        info: "#0A84FF",
-        link: "#0000EE",
-        warning: "#ffcc00",
-        gray: "#888",
+        primary: currentConfig.colors.primary,
+        secondary: currentConfig.colors.secondary,
+        success: currentConfig.colors.success,
+        danger: currentConfig.colors.danger,
+        notification: currentConfig.colors.notification,
+        info: currentConfig.colors.info,
+        link: currentConfig.colors.link,
+        warning: currentConfig.colors.warning,
+        gray: currentConfig.colors.gray,
       },
     };
   }, [JSON.stringify(currentConfig), colorScheme]);
