@@ -50,7 +50,9 @@ async function triggerAction<T>(
             callback({ loading: true });
           }
 
-          const apiResult = await sendApiRequest(endpoint, merged);
+          const apiResult = await sendApiRequest(endpoint, merged, {
+            headers: action.headers
+          });
 
           if (typeof callback != "undefined") {
             callback({ loading: false });
@@ -63,7 +65,10 @@ async function triggerAction<T>(
             MessageController.show({
               type: "alert",
               title: typeof title != "undefined" && title != "" ? title : "Ops",
-              message: typeof message != "undefined" && message != "" ? message : "Si è verificato un errore",
+              message:
+                typeof message != "undefined" && message != ""
+                  ? message
+                  : "Si è verificato un errore",
             });
             return;
           }

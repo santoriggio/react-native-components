@@ -1,8 +1,7 @@
 import React, { useRef, createContext, useContext, useCallback, useSyncExternalStore } from "react";
-import Listener from "../utils/Listener";
-
+import Emitter from "js-fast-emitter";
 export default function createFastContext<Store>(initialState: Store) {
-  const _listener = new Listener({});
+  const _listener = new Emitter();
 
   function useStoreData(): {
     get: () => Store;

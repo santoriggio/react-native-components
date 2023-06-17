@@ -59,17 +59,15 @@ class Listener<E extends string, T> {
       toReturn = { remove: () => this.remove(event, 0) };
     }
 
+
+
+    console.log(this.emitter[event])
+
     return toReturn;
   }
 
   remove(event: E, index: number) {
-    // console.log("Prima:", this.emitter);
-
-    // console.log(this.emitter[event], index);
-
     delete this.emitter[event].listener[index];
-
-    //console.log("Dopo:", this.emitter);
   }
 
   emit(event: E, params?: T) {

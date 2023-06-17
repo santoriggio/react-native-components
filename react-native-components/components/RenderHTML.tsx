@@ -23,7 +23,7 @@ export default function RenderHTML({ ...props }: IProps) {
   };
 
   return (
-    <View style={{ flexGrow: 1, ...props.containerStyle }}>
+    <View renderToHardwareTextureAndroid style={{ flexGrow: 1, ...props.containerStyle }}>
       {isLoading && (
         <ActivityIndicator
           style={{ position: "absolute", left: 0, top: 0, zIndex: 10 }}

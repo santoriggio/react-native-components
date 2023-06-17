@@ -59,7 +59,11 @@ function Select(props: SelectProps) {
     let toReturn: string = placeholder;
 
     if (typeof selectedItem != "undefined") {
-      if (typeof selectedItem == "object" && Array.isArray(selectedItem) && selectedItem.length > 0) {
+      if (
+        typeof selectedItem == "object" &&
+        Array.isArray(selectedItem) &&
+        selectedItem.length > 0
+      ) {
         let formatted: string[] = [];
 
         selectedItem.forEach((str, id) => {
@@ -78,9 +82,7 @@ function Select(props: SelectProps) {
       if (typeof selectedItem != "object") {
         const item = typeof items[selectedItem] != "undefined" ? items[selectedItem] : undefined;
 
-        if (typeof item == "undefined") {
-          toReturn = selectedItem;
-        } else {
+        if (typeof item != "undefined") {
           if (typeof item == "object") {
             toReturn = item.text;
           } else {
@@ -125,8 +127,14 @@ function Select(props: SelectProps) {
             alignItems: "center",
           }}
         >
-          <Flag countryCode={typeof selectedItem != "undefined" && flag.length > 0 ? flag[0].code : "IT"} />
-          <Text numberOfLines={1} style={{ marginLeft: spacing }}>{selectedItem}</Text>
+          <Flag
+            countryCode={
+              typeof selectedItem != "undefined" && flag.length > 0 ? flag[0].code : "IT"
+            }
+          />
+          <Text numberOfLines={1} style={{ marginLeft: spacing }}>
+            {typeof selectedItem != "undefined" && flag.length > 0 ? selectedItem : "Italia"}
+          </Text>
         </TouchableOpacity>
       ) : (
         <Accordion ref={accordion} title={accordionTitle}>
@@ -172,7 +180,8 @@ function Select(props: SelectProps) {
             };
 
             if (item) {
-              const filled = typeof item == "object" && typeof item.type != "undefined" && item.type == "filled";
+              const filled =
+                typeof item == "object" && typeof item.type != "undefined" && item.type == "filled";
 
               const textColor =
                 typeof item == "object" && typeof item.textColor != "undefined"
@@ -192,22 +201,26 @@ function Select(props: SelectProps) {
                     alignItems: "center",
                     padding: spacing,
                     backgroundColor: filled ? item.color : undefined,
-
                   }}
                 >
-                  {type == "multiselect" && <Checkbox isChecked={isSelected(key)} style={{ marginRight: spacing }} />}
-                  {typeof item == "object" && (typeof item.type == "undefined" || item.type == "bullet") && (
-                    <View
-                      style={{
-                        height: spacing,
-                        width: spacing,
-                        borderRadius: spacing,
-                        backgroundColor: item.color,
-                        marginRight: spacing,
-                      }}
-                    />
+                  {type == "multiselect" && (
+                    <Checkbox isChecked={isSelected(key)} style={{ marginRight: spacing }} />
                   )}
-                  <Text numberOfLines={1} style={{flex:1, color: textColor,  }}>{typeof item == "object" ? item.text : item}</Text>
+                  {typeof item == "object" &&
+                    (typeof item.type == "undefined" || item.type == "bullet") && (
+                      <View
+                        style={{
+                          height: spacing,
+                          width: spacing,
+                          borderRadius: spacing,
+                          backgroundColor: item.color,
+                          marginRight: spacing,
+                        }}
+                      />
+                    )}
+                  <Text numberOfLines={1} style={{ flex: 1, color: textColor }}>
+                    {typeof item == "object" ? item.text : item}
+                  </Text>
                 </TouchableOpacity>
               );
             }

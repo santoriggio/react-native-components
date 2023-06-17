@@ -1,6 +1,18 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
-import { ActivityIndicator, ListRenderItem, RefreshControl, FlatList as DefaultFlatList } from "react-native";
+import {
+  ActivityIndicator,
+  ListRenderItem,
+  RefreshControl,
+  FlatList as DefaultFlatList,
+} from "react-native";
 import keyExist from "../functions/keyExist";
 import sendApiRequest from "../functions/sendApiRequest";
 import { FlatListMethods, FlatListProps } from "../types";
@@ -9,7 +21,7 @@ import Text from "./Text";
 import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
 import ListItem from "./ListItem";
 import { Loading, useLayout, deepMerge, AppSettings } from "..";
-
+import { SearchPickerController } from "./SearchPicker";
 const AnimatedFlatList = Animated.createAnimatedComponent<any>(DefaultFlatList);
 
 const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
@@ -20,7 +32,8 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       params,
       unread,
       selected,
-      //canRefresh,
+      setSelected,
+      canRefresh,
       enableDebugLogs,
       structure,
       mergeParams = {},
@@ -38,6 +51,7 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       scrollX,
       onLoadEnd,
       keysPath,
+      showLoading,
       ...props
     },
     ref
@@ -63,17 +77,41 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
 
     useEffect(() => {
       const listener = AppSettings.addListener("refresh", (x) => {
-        const module_id = typeof merged["module_id"] != "undefined" ? merged["module_id"] : undefined;
+        const module_id =
+          typeof merged["module_id"] != "undefined" ? merged["module_id"] : undefined;
 
-        if (typeof module_id != "undefined" && typeof x != "undefined" && typeof x[module_id] != "undefined") {
+        if (
+          typeof module_id != "undefined" &&
+          typeof x != "undefined" &&
+          typeof x[module_id] != "undefined"
+        ) {
           if (x[module_id] == true) {
             refresh();
+
+            if (typeof x.preselected != "undefined") {
+              //in picker
+
+              if (SearchPickerController.isVisible()) {
+                updateP(x.preselected);
+              }
+            }
           }
         }
       });
 
       return () => listener.remove();
     }, []);
+
+    const updateP = (p: any) => {
+      if (typeof setSelected != "undefined") {
+        setSelected((prevState: any) => {
+          if (typeof prevState != "undefined") {
+            return [...prevState, ...p];
+          }
+          return p;
+        });
+      }
+    };
 
     const onScroll = useAnimatedScrollHandler({
       onScroll: (event) => {
@@ -128,19 +166,28 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       return toReturn;
     };
 
-    if (typeof data == "undefined" && isLoading) {
+    if (
+      (typeof showLoading == "undefined" || showLoading == true) &&
+      typeof data == "undefined" &&
+      isLoading
+    ) {
       return <Loading skeletonPlaceholder={props.skeletonPlaceholder} />;
     }
 
-    if (typeof data == "undefined") {
+    if (typeof data == "undefined" && isLoading == false) {
       return (
-        <Text style={{ padding: spacing, textAlign: "center" }}>
-          No data found, please provide one of these two keys to see some data data / endpoint
-        </Text>
+        <NoData
+          icon={emptyList.icon}
+          title={emptyList.title}
+          subtitle={emptyList.subtitle}
+          onRefresh={refresh}
+          refreshing={refreshing}
+          content={emptyList.content}
+        />
       );
     }
 
-    if (data.length == 0) {
+    if (typeof data != "undefined" && data.length == 0 && isLoading == false) {
       return (
         <NoData
           icon={emptyList.icon}
@@ -163,7 +210,9 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
           onPress={onPressItem}
           onLongPress={onLongPressItem}
           unread={typeof unread != "undefined" ? unread.some((x) => x == item.id) : undefined}
-          selected={typeof selected != "undefined" ? selected.some((x) => x.id == item.id) : undefined}
+          selected={
+            typeof selected != "undefined" ? selected.some((x) => x.id == item.id) : undefined
+          }
           {...item}
         />
       );
@@ -177,13 +226,20 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
         keyExtractor={keyExtractor}
         onEndReached={onEndReached}
         onEndReachedThreshold={props.onEndReachedThreshold ? props.onEndReachedThreshold : 0.8}
-        // refreshControl={
-        //   typeof canRefresh == "undefined" || canRefresh == true ? (
-        //     <RefreshControl refreshing={refreshing} onRefresh={refresh} />
-        //   ) : undefined
-        // }
+        refreshControl={
+          typeof canRefresh == "undefined" || canRefresh == true ? (
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+          ) : undefined
+        }
         ListFooterComponent={
-          <>{hasMore && <ActivityIndicator style={{ alignSelf: "center", marginVertical: spacing }} size="small" />}</>
+          <>
+            {hasMore && (
+              <ActivityIndicator
+                style={{ alignSelf: "center", marginVertical: spacing }}
+                size="small"
+              />
+            )}
+          </>
         }
         renderItem={renderItem}
         data={data}
@@ -235,7 +291,7 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
       if (typeof keyExist(props.data) != "undefined" && props.data != null) {
         setData(props.data as any);
         if (typeof props.onLoadEnd != "undefined" && typeof props.onLoadEnd == "function") {
-          props.onLoadEnd();
+          props.onLoadEnd(props.data);
         }
       }
       return setIsLoading(false);
@@ -267,7 +323,7 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
     setRefreshing(false);
 
     if (typeof data == "undefined" && params.page == 1 && typeof props.onLoadEnd != "undefined") {
-      props.onLoadEnd();
+      props.onLoadEnd(apiResult.data);
     }
 
     if (typeof apiResult.error != "undefined") {
@@ -278,6 +334,7 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
       setHasMore(false);
 
       if (params.page == 1) {
+        console.log(params.page);
         setData([]);
       }
 
@@ -334,8 +391,6 @@ function useGetListData<T>({ ...props }: Partial<FlatListProps<T>>) {
       if (typeof prevState == "undefined" || params.page == 1) {
         return toReturn;
       }
-
-      console.log(toReturn.length);
 
       return [...prevState, ...toReturn];
     });

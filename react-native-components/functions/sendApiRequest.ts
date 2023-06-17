@@ -23,12 +23,10 @@ interface I {
 const sendApiRequest = async (
   endpoint: I["enpoint"],
   params: I["params"],
-  options: I["options"] = {
-    method: "POST",
-    useCache: 0,
-    headers: {},
-  }
+  options: I["options"] = {}
 ) => {
+  const { method = "POST", useCache = 0, headers = {} } = options;
+
   if (endpoint[0] != "/") {
     endpoint = "/" + endpoint;
   }
@@ -54,45 +52,48 @@ const sendApiRequest = async (
     throw new Error("'url' must be set before fetch data");
   }
 
-  const headers = deepMerge(currentConfig.sendApiRequest.headers, options.headers);
-
-
-
   const result = await fetch(currentConfig.sendApiRequest.url + endpoint, {
-    method: options.method,
-    headers,
+    method,
+    headers: deepMerge(currentConfig.sendApiRequest.headers, headers),
     body: JSON.stringify(params),
   });
 
-  const json = await result.json();
+  try {
+    const json = await result.json();
 
-  if (typeof json == "undefined" || json == null || Array.isArray(json)) {
-    return {
-      error: json,
-    };
-  }
-
-  if (typeof json.error != "undefined") {
-    if (typeof currentConfig.sendApiRequest.errors != "undefined") {
-      if (typeof currentConfig.sendApiRequest.errors[json.error] != "undefined") {
-        currentConfig.sendApiRequest.errors[json.error](json);
-      }
+    if (typeof json == "undefined" || json == null || Array.isArray(json)) {
+      return {
+        error: json,
+      };
     }
 
-    // if (json.error == "customer_token_expired") {
-    //   // Storage.clearStorage();
-    //   // Cache.clear();
+    if (typeof json.error != "undefined") {
+      if (typeof currentConfig.sendApiRequest.errors != "undefined") {
+        if (typeof currentConfig.sendApiRequest.errors[json.error] != "undefined") {
+          currentConfig.sendApiRequest.errors[json.error](json);
+        }
+      }
+
+      // if (json.error == "customer_token_expired") {
+      //   // Storage.clearStorage();
+      //   // Cache.clear();
+      // }
+
+      // if (json.error == "obsolete_app_version") {
+      // }
+    }
+
+    // if (typeof options !== "undefined" && typeof options.useCache !== "undefined") {
+    //   Cache.set(cache_key, [json.data, now]);
     // }
 
-    // if (json.error == "obsolete_app_version") {
-    // }
+    return json;
+  } catch (e) {
+    return {
+      error: true,
+      message: "Si è verificato un errore durante il collegamento, riprova.",
+    };
   }
-
-  // if (typeof options !== "undefined" && typeof options.useCache !== "undefined") {
-  //   Cache.set(cache_key, [json.data, now]);
-  // }
-
-  return json;
 };
 
 export default sendApiRequest;

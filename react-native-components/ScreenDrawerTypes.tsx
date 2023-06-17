@@ -13,6 +13,7 @@ import {
   ModuleProps,
   ReviewsSummaryProps,
   ScrollViewProps,
+  SearchProps,
   SelectProps,
   SliderProps,
   TextProps,
@@ -141,6 +142,11 @@ interface Module extends ModuleProps {
   component: "modulepicker";
   windowSize?: number;
 }
+interface Search extends SearchProps {
+  id?: string;
+  component: "searchpicker";
+  windowSize?: number;
+}
 
 interface Select extends SelectProps {
   id?: string;
@@ -198,7 +204,8 @@ export type ScreenDrawerComponent =
   | Cart
   | Module
   | Select
-  | ButtonsList;
+  | ButtonsList
+  | Search;
 
 export type ScreenDrawerProps = {
   data?: any;
@@ -210,7 +217,7 @@ export type ScreenDrawerProps = {
   scrollEnabled?: boolean;
   path?: string;
   onChange?: (details: any) => void;
-  canContinue?: boolean | 0 | 1
+  canContinue?: boolean | 0 | 1;
   drillProps?: boolean;
   hasMargin?: boolean;
 };

@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Image, PixelRatio, StyleSheet, Text } from "react-native";
+import { Image, PixelRatio, StyleSheet, Text, ViewStyle } from "react-native";
 
 declare interface Flag {}
 
@@ -10,10 +10,11 @@ type FlagType = {
   name?: string;
   dial_code?: string;
   code?: string;
+  style?: ViewStyle
 };
 
 const Flag = memo(({ ...props }: FlagType) => {
-  return <Image source={{ uri: images[props.countryCode] }} style={styles.flag} />;
+  return <Image source={{ uri: images[props.countryCode] }} style={[styles.flag, props.style]} />;
 });
 
 export { FlagType, CountryCode };

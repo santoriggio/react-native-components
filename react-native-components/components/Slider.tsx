@@ -87,6 +87,8 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
       {typeof props.data !== "undefined" && (
         <View
           style={{
+            position: "absolute",
+            bottom: 0,
             backgroundColor: "transparent",
             padding: spacing / 4,
             flexDirection: "row",

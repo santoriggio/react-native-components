@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Action, ButtonProps, ButtonTypes } from "../types";
-import { ActivityIndicator, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Text from "./Text";
 import keyExist from "../functions/keyExist";
 import Icon from "./Icon";
@@ -14,7 +20,13 @@ import triggerAction from "../functions/triggerAction";
 import { MessageController } from "./Message";
 
 function Button(props: ButtonProps) {
-  const { loading = false, active = true, role = "primary", type = "filled", ...otherProps } = props;
+  const {
+    loading = false,
+    active = true,
+    role = "primary",
+    type = "filled",
+    ...otherProps
+  } = props;
   const { spacing, icon_size, radius, Colors } = useLayout();
   const [loadingState, setLoadingState] = useState<boolean>(loading);
 
@@ -29,7 +41,7 @@ function Button(props: ButtonProps) {
           type: "toast",
           title: "Dati mancanti",
           message: "Compila i dati mancanti per continuare",
-          role: "info",
+          role: "warning",
         });
       }
 
@@ -94,7 +106,8 @@ function Button(props: ButtonProps) {
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "row",
-        minHeight: typeof props.type != "undefined" && props.type == "plain" ? undefined : spacing * 4.2,
+        minHeight:
+          typeof props.type != "undefined" && props.type == "plain" ? undefined : spacing * 4.2,
         ...props.style,
       }}
     >
@@ -102,23 +115,40 @@ function Button(props: ButtonProps) {
         style={{
           ...StyleSheet.absoluteFillObject,
           backgroundColor: background,
-          opacity: typeof background == "undefined" ? 0 : props.type == "gray" || props.type == "tinted" ? 0.25 : 1,
+          opacity:
+            typeof background == "undefined"
+              ? 0
+              : props.type == "gray" || props.type == "tinted"
+              ? 0.25
+              : 1,
         }}
       />
       {hasIcon && (
-        <Icon family="Ionicons" name={props.icon} color={textColor} size={icon_size * 1.2} style={props.iconStyle} />
+        <Icon
+          family="Ionicons"
+          name={props.icon}
+          color={textColor}
+          size={icon_size * 1.2}
+          style={props.iconStyle}
+        />
       )}
       {typeof otherProps.title != "undefined" && otherProps.title.trim() != "" && (
         <Text
           numberOfLines={1}
           size={typeof props.size != "undefined" ? props.size : "l"}
-          style={{ marginLeft: hasIcon ? spacing * 0.5 : undefined, color: textColor, ...otherProps.textStyle }}
+          style={{
+            marginLeft: hasIcon ? spacing * 0.5 : undefined,
+            color: textColor,
+            ...otherProps.textStyle,
+          }}
           bold
         >
           {otherProps.title}
         </Text>
       )}
-      {loadingState == true && <ActivityIndicator size="small" color={textColor} style={{ marginLeft: spacing }} />}
+      {loadingState == true && (
+        <ActivityIndicator size="small" color={textColor} style={{ marginLeft: spacing }} />
+      )}
     </TouchableOpacity>
   );
 }

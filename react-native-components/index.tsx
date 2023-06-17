@@ -20,6 +20,7 @@ export { default as Loading } from "./components/Loading";
 export { default as RenderHTML } from "./components/RenderHTML";
 export { default as Accordion } from "./components/Accordion";
 export { default as FlagPicker, FlagPickerController } from "./components/FlagPicker";
+export { default as Flag } from "./components/Flag";
 export { default as BottomSheet, BottomSheetController } from "./components/BottomSheet";
 export { default as SearchPicker, SearchPickerController } from "./components/SearchPicker";
 export { default as ButtonsList } from "./components/ButtonsList";

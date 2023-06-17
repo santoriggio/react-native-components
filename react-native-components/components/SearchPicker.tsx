@@ -9,7 +9,15 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { View, Modal, BackHandler, TouchableOpacity, Platform, StyleSheet, KeyboardAvoidingView } from "react-native";
+import {
+  View,
+  Modal,
+  BackHandler,
+  TouchableOpacity,
+  Platform,
+  StyleSheet,
+  KeyboardAvoidingView,
+} from "react-native";
 import Animated, { FadeIn, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -59,6 +67,8 @@ type ModulePickerOptions = {
 
 type SearchOptions = {
   type: "search";
+  limit?: number;
+  params?: any;
 };
 
 type FlagPickerOptions = {
@@ -124,7 +134,6 @@ function SearchPicker() {
   const [selected, setSelected] = useState<any[] | undefined>([]);
   const [query, setQuery] = useState<string>("");
   const [data, setData] = useState<any>({});
-  const [canContinue, setCanContinue] = useState<boolean>(true);
   const screens = useRef<any>({});
 
   useLayoutEffect(() => {
@@ -136,10 +145,23 @@ function SearchPicker() {
       setModalVisible(true);
 
       if (typeof option != "undefined") {
-        if (option.type == "modulepicker") {
+        
+          
           const { limit = 1, ...other } = option;
-          if (limit == 1) setSelected(undefined);
-        }
+         
+
+          if (limit == 1) {
+            setSelected(undefined);
+          } else {
+         
+            if (
+              typeof option.preselected != "undefined" &&
+              Object.keys(option.preselected).length > 0
+            ) {
+              setSelected(option.preselected);
+            }
+          }
+        
 
         setOptions((prevState) => {
           setTimeout(() => {
@@ -184,11 +206,26 @@ function SearchPicker() {
     getStatus: () => modalVisible,
   }));
 
-  const uploadMedia = async ({ mediaType, media, global }: any) => {
+  useEffect(() => {
+    if (typeof selected != "undefined" && selected.length > 0 && options.length > 0) {
+      const lastElement = options[options.length - 1];
+
+      if (lastElement.type == "modulepicker") {
+        const { limit = 1, content, module_id, onSuccess = () => {} } = lastElement;
+
+        if (limit == 1) {
+          SearchPickerController.hide(1);
+          onSuccess([selected[0]], [selected[0].id]);
+        }
+      }
+    }
+  }, [JSON.stringify(selected)]);
+
+  const uploadMedia = async ({ mediaType, media, global, limit = 25 }: any) => {
     if (mediaType === "image") {
       const options: any = {
         mediaType: "photo",
-        selectionLimit: 25,
+        selectionLimit: limit,
         includeBase64: false,
         maxHeight: 1980,
         maxWidth: 1980,
@@ -219,29 +256,6 @@ function SearchPicker() {
 
       return Storage.set("mediaToUpload", formatted);
     } else if (mediaType === "file") {
-      // const result = await DocumentPicker.pickMultiple({
-      //   allowMultiSelection: true,
-      // });
-      // if (typeof result === "undefined") return;
-      // MessageController.show({
-      //   type: "toast",
-      //   title: "Media in caricament",
-      //   message: `Attendi qualche secondo, non uscire dall'app`,
-      //   role: "info",
-      // });
-      // const e = Storage.get("environment");
-      // let formatted = result.map((asset) => {
-      //   return {
-      //     ...asset,
-      //     environment: e,
-      //     global,
-      //   };
-      // });
-      // const hasMediaToUpload: any[] | undefined = Storage.get("mediaToUpload");
-      // if (typeof hasMediaToUpload !== "undefined" && hasMediaToUpload.length > 0) {
-      //   formatted = [...hasMediaToUpload, ...formatted];
-      // }
-      // return Storage.set("mediaToUpload", formatted);
     }
   };
 
@@ -249,7 +263,11 @@ function SearchPicker() {
 
   const getTabs = async (m: string) => {
     if (m == "contenuti_media") {
-      return uploadMedia({ mediaType: "image", global: lastOption.global });
+      return uploadMedia({
+        mediaType: "image",
+        global: lastOption.global,
+        limit: lastOption.limit,
+      });
     }
 
     SearchPickerController.show({
@@ -279,7 +297,10 @@ function SearchPicker() {
                 return MessageController.show({
                   type: "alert",
                   title: typeof returndata.title != "undefined" ? returndata.title : "Ops",
-                  message: typeof returndata.message != "undefined" ? returndata.message : "Si è verificato un errore",
+                  message:
+                    typeof returndata.message != "undefined"
+                      ? returndata.message
+                      : "Si è verificato un errore",
                 });
               }
 
@@ -346,25 +367,23 @@ function SearchPicker() {
         if (typeof options != "undefined" && options.length > 0) {
           const lastElement = options[options.length - 1];
 
-          if (lastElement.type == "modulepicker") {
-            const { limit = 1, content, module_id, onSuccess = () => {} } = lastElement;
+          const { limit = 1, content, module_id, onSuccess = () => {} } = lastElement;
 
-            if (limit > 1) {
-              if (typeof prevState == "undefined") return [item];
+          if (limit > 1) {
+            if (typeof prevState == "undefined") return [item];
 
-              let index = prevState.findIndex((x) => x.id == item.id);
+            let index = prevState.findIndex((x) => x.id == item.id);
 
-              if (index >= 0) {
-                return prevState.filter((x) => x.id != item.id);
-              } else {
-                if (prevState.length == limit) return prevState;
-
-                return [...prevState, item];
-              }
+            if (index >= 0) {
+              return prevState.filter((x) => x.id != item.id);
             } else {
-              SearchPickerController.hide(1);
-              onSuccess([item], [item.id]);
+              if (prevState.length == limit) return prevState;
+
+              return [...prevState, item];
             }
+          } else {
+            SearchPickerController.hide(1);
+            onSuccess([item], [item.id]);
           }
         }
       });
@@ -373,7 +392,11 @@ function SearchPicker() {
   );
 
   const searchBarOptions = useMemo(() => {
-    if (lastOption.type == "modulepicker" || lastOption.type == "search" || lastOption.type == "flag") {
+    if (
+      lastOption.type == "modulepicker" ||
+      lastOption.type == "search" ||
+      lastOption.type == "flag"
+    ) {
       return {
         placeholder: "Cerca",
         onChangeText: (text: string) => {
@@ -386,7 +409,11 @@ function SearchPicker() {
   }, [JSON.stringify(lastOption)]);
 
   return (
-    <Modal visible={modalVisible} animationType="slide" onRequestClose={() => SearchPickerController.hide(1)}>
+    <Modal
+      visible={modalVisible}
+      animationType="slide"
+      onRequestClose={() => SearchPickerController.hide(1)}
+    >
       <Header
         left={headerLeft}
         right={headerRight}
@@ -396,7 +423,9 @@ function SearchPicker() {
       />
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "height" : undefined}
-        keyboardVerticalOffset={-bottom + spacing - (typeof lastOption.tabs != "undefined" ? top : 0)}
+        keyboardVerticalOffset={
+          -bottom + spacing - (typeof lastOption.tabs != "undefined" ? top : 0)
+        }
         style={{ flex: 1 }}
       >
         {options.map((option: any, index: number) => {
@@ -409,6 +438,7 @@ function SearchPicker() {
               setData={setData}
               query={query}
               selected={selected}
+              setSelected={setSelected}
               onPressItem={onPressItem}
             />
           );
@@ -421,95 +451,234 @@ function SearchPicker() {
 export { SearchPickerController };
 export default SearchPicker;
 
-const CustomScreen = forwardRef<any, any>(({ query, selected, onPressItem, ...option }, ref) => {
-  const { Colors, spacing, icon_size } = useLayout();
-  const { bottom } = useSafeAreaInsets();
-  const [data, setData] = useState<any>({});
+const CustomScreen = forwardRef<any, any>(
+  ({ query, selected, setSelected, onPressItem, ...option }, ref) => {
+    const { Colors, spacing, icon_size } = useLayout();
+    const { bottom } = useSafeAreaInsets();
+    const [data, setData] = useState<any>({});
 
-  const [tabs, setTabs] = useState<any>(undefined);
+    const [tabs, setTabs] = useState<any>(undefined);
 
-  const [flags, setFlags] = useState<any>(Flags);
+    const [flags, setFlags] = useState<any>(Flags);
 
-  const [canContinue, setCanContinue] = useState<boolean>(false);
+    const [canContinue, setCanContinue] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (option.type == "flag") {
-      const queryToLowerCase = query.toLowerCase();
 
-      const newArray = Flags.filter((flag: FlagType) => {
-        if (typeof flag.name != "undefined") {
-          const nameToLowerCase = flag.name.toLowerCase();
 
-          if (nameToLowerCase.includes(queryToLowerCase)) return flag;
-        }
-      });
+    useEffect(() => {
+      if (option.type == "flag") {
+        const queryToLowerCase = query.toLowerCase();
 
-      return setFlags(newArray);
-    }
-  }, [query]);
+        const newArray = Flags.filter((flag: FlagType) => {
+          if (typeof flag.name != "undefined") {
+            const nameToLowerCase = flag.name.toLowerCase();
 
-  useEffect(() => {
-    if (typeof option.tabs != "undefined") {
-      if (Array.isArray(option.tabs)) {
-        setTabs(option.tabs);
-      } else {
-        getTabs();
+            if (nameToLowerCase.includes(queryToLowerCase)) return flag;
+          }
+        });
+
+        return setFlags(newArray);
       }
-    }
-  }, []);
+    }, [query]);
 
-  const getTabs = async () => {
-    const info = option.tabs;
-
-    const apiResult = await sendApiRequest(info.endpoint, info.params);
-
-    if (typeof apiResult.error != "undefined") {
-      return SearchPickerController.hide();
-    }
-
-    let toReturn = apiResult.data;
-
-    if (typeof info.path != "undefined") {
-      info.path.split("/").map((x) => {
-        if (x.trim() != "" && typeof toReturn[x] != "undefined") {
-          toReturn = toReturn[x];
+    useEffect(() => {
+      if (typeof option.tabs != "undefined") {
+        if (Array.isArray(option.tabs)) {
+          setTabs(option.tabs);
+        } else {
+          getTabs();
         }
-      });
+      }
+    }, []);
+
+    const getTabs = async () => {
+      const info = option.tabs;
+
+      const apiResult = await sendApiRequest(info.endpoint, info.params);
+
+      if (typeof apiResult.error != "undefined") {
+        return SearchPickerController.hide();
+      }
+
+      let toReturn = apiResult.data;
+
+      if (typeof info.path != "undefined") {
+        info.path.split("/").map((x) => {
+          if (x.trim() != "" && typeof toReturn[x] != "undefined") {
+            toReturn = toReturn[x];
+          }
+        });
+      }
+
+      setTabs(toReturn);
+    };
+
+    useImperativeHandle(ref, () => ({
+      setData: (newData: any) => setData(newData),
+      getData: () => data,
+    }));
+
+    if (option.type == "modulepicker") {
+      return (
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
+          <ScreenDrawer
+            content={option.content}
+            flatListProps={{
+              query,
+              selected,
+              setSelected,
+              onPressItem,
+            }}
+          />
+          {typeof option.limit != "undefined" && option.limit > 1 && (
+            <View
+              style={{
+                padding: spacing,
+                borderTopWidth: 1,
+                borderColor: Colors.border,
+                paddingBottom: bottom == 0 ? spacing : bottom,
+              }}
+            >
+              <Button
+                title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
+                action={() => {
+                  if (typeof option != "undefined" && typeof option.type != "undefined") {
+                    if (option.type == "modulepicker") {
+                      const { limit = 1, content, module_id, onSuccess = () => {} } = option;
+
+                      if (typeof selected != "undefined") {
+                        SearchPickerController.hide();
+                        onSuccess(
+                          selected,
+                          selected.map((x: any) => x.id)
+                        );
+                      }
+                    }
+                  }
+                }}
+              />
+            </View>
+          )}
+        </View>
+      );
     }
 
-    setTabs(toReturn);
-  };
-
-  useImperativeHandle(ref, () => ({
-    setData: (newData: any) => setData(newData),
-    getData: () => data,
-  }));
-
-  if (option.type == "modulepicker") {
-    return (
-      <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
-        <ScreenDrawer
-          content={option.content}
-          flatListProps={{
-            query,
-            selected,
-            onPressItem,
-          }}
-        />
-        {typeof option.limit != "undefined" && option.limit > 1 && (
-          <View
+    if (option.type == "flag") {
+      const renderItem: any = ({ item, index }: any) => {
+        return (
+          <TouchableOpacity
+            onPress={() => {
+              SearchPickerController.hide(1);
+              option.onSuccess(item);
+            }}
+            activeOpacity={0.5}
             style={{
+              flexDirection: "row",
+              alignItems: "center",
               padding: spacing,
-              borderTopWidth: 1,
+              backgroundColor: Colors.background,
+              paddingRight: spacing,
               borderColor: Colors.border,
-              paddingBottom: bottom == 0 ? spacing : bottom,
+              borderBottomWidth: 1,
             }}
           >
-            <Button
-              title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
-              action={() => {
-                if (typeof option != "undefined" && typeof option.type != "undefined") {
-                  if (option.type == "modulepicker") {
+            <Flag countryCode={item.code} />
+            {typeof option.prefixVisible !== "undefined" && option.prefixVisible === true && (
+              <Text style={{ color: Colors.gray, marginLeft: spacing }}>({item.dial_code})</Text>
+            )}
+            <Text numberOfLines={1} style={{ flex: 1, marginLeft: spacing }}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        );
+      };
+      return (
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
+          <FlatList
+            data={flags}
+            initialNumToRender={20}
+            renderItem={renderItem}
+            contentInset={{ bottom }}
+          />
+        </View>
+      );
+    }
+
+    if (typeof option.type == "undefined" || option.type == "" || option.type == "search") {
+      return (
+        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
+          {typeof option.tabs != "undefined" && (
+            <>
+              {typeof tabs != "undefined" ? (
+                <TabNavigation
+                  data={data}
+                  setData={setData}
+                  tabs={tabs.map((tab: any) => {
+                    return {
+                      ...tab,
+                      path: "/" + tab.id,
+                    };
+                  })}
+                  onChange={(details) => {
+                    setCanContinue(details.canContinue);
+                  }}
+                />
+              ) : (
+                <Loading />
+              )}
+            </>
+          )}
+
+          {typeof option.tabs == "undefined" && (
+            <ScreenDrawer
+              flatListProps={{
+                selected,
+                setSelected,
+                query,
+                onPressItem,
+              }}
+              data={data}
+              setData={setData}
+              content={option.content}
+              onChange={(details) => {
+                setCanContinue(details.canContinue);
+              }}
+            />
+          )}
+
+          {typeof option.footer != "undefined" && (
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderColor: Colors.border,
+                padding: spacing,
+                paddingBottom: bottom == 0 ? spacing : bottom,
+              }}
+            >
+              <ScreenDrawer
+                canContinue={canContinue}
+                data={data}
+                hasScroll={false}
+                setData={setData}
+                content={option.footer}
+                hasMargin={false}
+              />
+            </View>
+          )}
+
+          {typeof option.limit != "undefined" && option.limit > 1 && (
+            <View
+              style={{
+                padding: spacing,
+                borderTopWidth: 1,
+                borderColor: Colors.border,
+                paddingBottom: bottom == 0 ? spacing : bottom,
+              }}
+            >
+              <Button
+                title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
+                action={() => {
+                  if (typeof option != "undefined") {
                     const { limit = 1, content, module_id, onSuccess = () => {} } = option;
 
                     if (typeof selected != "undefined") {
@@ -520,112 +689,14 @@ const CustomScreen = forwardRef<any, any>(({ query, selected, onPressItem, ...op
                       );
                     }
                   }
-                }
-              }}
-            />
-          </View>
-        )}
-      </View>
-    );
-  }
-
-  if (option.type == "flag") {
-    const renderItem: any = ({ item, index }: any) => {
-      return (
-        <TouchableOpacity
-          onPress={() => {
-            SearchPickerController.hide(1);
-            option.onSuccess(item);
-          }}
-          activeOpacity={0.5}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            padding: spacing,
-            backgroundColor: Colors.background,
-            paddingRight: spacing,
-            borderColor: Colors.border,
-            borderBottomWidth: 1,
-          }}
-        >
-          <Flag countryCode={item.code} />
-          {typeof option.prefixVisible !== "undefined" && option.prefixVisible === true && (
-            <Text style={{ color: Colors.gray, marginLeft: spacing }}>({item.dial_code})</Text>
-          )}
-          <Text numberOfLines={1} style={{ flex: 1, marginLeft: spacing }}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      );
-    };
-    return (
-      <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
-        <FlatList data={flags} initialNumToRender={20} renderItem={renderItem} contentInset={{ bottom }} />
-      </View>
-    );
-  }
-
-  if (typeof option.type == "undefined" || option.type == "" || option.type == "search") {
-    return (
-      <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.background }}>
-        {typeof option.tabs != "undefined" && (
-          <>
-            {typeof tabs != "undefined" ? (
-              <TabNavigation
-                data={data}
-                setData={setData}
-                tabs={tabs.map((tab: any) => {
-                  return {
-                    ...tab,
-                    path: "/" + tab.id,
-                  };
-                })}
-                onChange={(details) => {
-                  setCanContinue(details.canContinue);
                 }}
               />
-            ) : (
-              <Loading />
-            )}
-          </>
-        )}
+            </View>
+          )}
+        </View>
+      );
+    }
 
-        {typeof option.tabs == "undefined" && (
-          <ScreenDrawer
-            data={data}
-            setData={setData}
-            content={option.content}
-            onChange={(details) => {
-              setCanContinue(details.canContinue);
-            }}
-          />
-        )}
-        {typeof option.footer != "undefined" && (
-          <View
-            style={{
-              borderTopWidth: 1,
-
-              borderColor: Colors.border,
-              padding: spacing,
-              paddingBottom: bottom == 0 ? spacing : bottom,
-            }}
-          >
-            <ScreenDrawer
-              canContinue={canContinue}
-              data={data}
-              hasScroll={false}
-              setData={setData}
-              content={option.footer}
-              hasMargin={false}
-            />
-            {/* {!canContinue && (
-              <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.gray, opacity: 0.3 }} />
-            )} */}
-          </View>
-        )}
-      </View>
-    );
+    return null;
   }
-
-  return null;
-});
+);

@@ -31,9 +31,13 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
 
   const googleInput = useRef<GooglePlacesAutocompleteRef>(null);
 
-  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(component.type == "password" ? true : false);
+  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(
+    component.type == "password" ? true : false
+  );
 
   const [data, setData] = useState<any>(value);
+
+  const [dataDetails, setDataDetails] = useState<any>(undefined);
 
   useEffect(() => {
     if (component.type === "address") {
@@ -58,9 +62,10 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
     }
 
     setData(toReturn);
+    setDataDetails(details);
 
     if (typeof onChange != "undefined" && typeof onChange == "function") {
-      onChange(toReturn);
+      onChange(toReturn, details);
     }
   };
 
@@ -274,7 +279,9 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
           scrollEnabled={component.type == "textarea" ? false : undefined}
           keyboardType={keyboardType}
           placeholderTextColor={Colors.gray}
-          autoCapitalize={component.type === "email" || component.type === "password" ? "none" : undefined}
+          autoCapitalize={
+            component.type === "email" || component.type === "password" ? "none" : undefined
+          }
           editable={component.active}
           size={component.size}
           textContentType={component.textContentType}
@@ -312,7 +319,14 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
               </View>
             )}
             {typeof component.suffix.icon != "undefined" && component.suffix.icon != "" && (
-              <View style={{ justifyContent: "center", alignItems: "center", width: spacing * 4.2, aspectRatio: 1 }}>
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: spacing * 4.2,
+                  aspectRatio: 1,
+                }}
+              >
                 <Icon name={component.suffix.icon} />
               </View>
             )}

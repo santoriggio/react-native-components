@@ -23,8 +23,8 @@ import ButtonsList from "./ButtonsList";
 import Bullet from "./Bullet";
 import AppSettings from "../utils/AppSettings";
 import deepMerge from "../functions/deepMerge";
-import { color } from "react-native-reanimated";
 import getColor from "../functions/getColor";
+import Search from "./Search";
 
 interface I {
   data?: any;
@@ -165,9 +165,36 @@ const RenderComponent = memo(({ component, ...props }: I) => {
   }, [JSON.stringify(component)]);
 
   const handleChange = useCallback(
-    (newValue: any) => {
+    (newValue: any, details?: any) => {
       if (typeof props.onChange != "undefined") {
         props.onChange(component, newValue, props.box_id);
+      }
+
+      if (typeof details != "undefined") {
+        if (typeof component.detailsPath != "undefined") {
+          Object.keys(component.detailsPath).forEach((key) => {
+            const path = component.detailsPath[key];
+
+            let toReturn = details;
+
+            path.split("/").forEach((x: string) => {
+              if (typeof x != "undefined" && x != "") {
+                toReturn = toReturn[x];
+              }
+            });
+
+            if (typeof props.onChange != "undefined") {
+              props.onChange({ id: key }, toReturn, props.box_id);
+            }
+          });
+        }
+        // else {
+        //   Object.keys(details).forEach(x => {
+        //     if (typeof props.onChange != 'undefined') {
+        //       props.onChange({id: x}, details[x], props.box_id)
+        //     }
+        //   })
+        // }
       }
     },
     [JSON.stringify(component)]
@@ -243,7 +270,9 @@ const RenderComponent = memo(({ component, ...props }: I) => {
           >
             {typeof component.title != "undefined" && component.title != "" && (
               <Text
-                numberOfLines={typeof component.numberOfLines != "undefined" ? component.numberOfLines : 1}
+                numberOfLines={
+                  typeof component.numberOfLines != "undefined" ? component.numberOfLines : 1
+                }
                 bold={component.bold}
                 size={component.size}
                 style={[{ color: textColor }, component.style]}
@@ -265,10 +294,19 @@ const RenderComponent = memo(({ component, ...props }: I) => {
         <Image
           {...component}
           style={{
-            width: typeof component.type != "undefined" && component.type == "avatar" ? spacing * 6 : "100%",
-            height: typeof component.type != "undefined" && component.type == "avatar" ? spacing * 6 : undefined,
+            width:
+              typeof component.type != "undefined" && component.type == "avatar"
+                ? spacing * 6
+                : "100%",
+            height:
+              typeof component.type != "undefined" && component.type == "avatar"
+                ? spacing * 6
+                : undefined,
             aspectRatio: component.aspectRatio,
-            borderRadius: typeof component.type != "undefined" && component.type == "avatar" ? spacing * 6 : radius,
+            borderRadius:
+              typeof component.type != "undefined" && component.type == "avatar"
+                ? spacing * 6
+                : radius,
           }}
         />
       );
@@ -295,9 +333,13 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                 <View
                   key={index}
                   style={{
-                    width: typeof row_component.windowSize == "number" ? row_component.windowSize + "%" : undefined,
+                    width:
+                      typeof row_component.windowSize == "number"
+                        ? row_component.windowSize + "%"
+                        : undefined,
                     flex:
-                      typeof row_component.windowSize != "undefined" && row_component.windowSize == "flex"
+                      typeof row_component.windowSize != "undefined" &&
+                      row_component.windowSize == "flex"
                         ? 1
                         : undefined,
                   }}
@@ -314,7 +356,8 @@ const RenderComponent = memo(({ component, ...props }: I) => {
           style={{
             borderRadius: radius,
             borderColor: Colors.border,
-            padding: typeof component.border != "undefined" && component.border > 0 ? spacing : undefined,
+            padding:
+              typeof component.border != "undefined" && component.border > 0 ? spacing : undefined,
             ...customStyle,
           }}
         >
@@ -325,7 +368,9 @@ const RenderComponent = memo(({ component, ...props }: I) => {
                   key={index}
                   style={{
                     width:
-                      (typeof column_component.windowSize !== "undefined" ? column_component.windowSize : 100) + "%",
+                      (typeof column_component.windowSize !== "undefined"
+                        ? column_component.windowSize
+                        : 100) + "%",
                   }}
                 >
                   <RenderComponent component={column_component} parent={component} />
@@ -338,6 +383,8 @@ const RenderComponent = memo(({ component, ...props }: I) => {
       return <Graph {...component} style={customStyle} />;
     case "modulepicker":
       return <Module {...component} value={props.value} onChange={handleChange} />;
+    case "searchpicker":
+      return <Search {...component} value={props.value} onChange={handleChange} />;
     case "select":
       return <Select {...component} selected={props.value} onChange={handleChange} />;
     case "buttonslist":
@@ -349,7 +396,9 @@ const RenderComponent = memo(({ component, ...props }: I) => {
 
 function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: ScreenDrawerProps) {
   const { spacing, Colors, radius, fontSize } = useLayout();
-  const [hiddenComponents, setHiddenComponents] = useState<string[]>([]);
+  const [hiddenComponents, setHiddenComponents] = useState<string[]>(
+    typeof props.hiddenComponents != "undefined" ? props.hiddenComponents : []
+  );
 
   const [canContinue, setCanContinue] = useState<boolean>(false);
 
@@ -362,7 +411,10 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
 
     props.content?.forEach((comp) => {
       if (comp.component == "box") {
-        const box_data = typeof comp.id != "undefined" && typeof data[comp.id] != "undefined" ? data[comp.id] : data;
+        const box_data =
+          typeof comp.id != "undefined" && typeof data[comp.id] != "undefined"
+            ? data[comp.id]
+            : data;
         const prev_box_data =
           typeof comp.id != "undefined" && typeof prevData.current[comp.id] != "undefined"
             ? prevData.current[comp.id]
@@ -385,20 +437,24 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
               : undefined;
 
           if (firstRender.current || (value != prevValue && typeof comp.trigger != "undefined")) {
-            triggerComponent(boxC.trigger, value, comp.id);
+            triggerComponent(boxC.trigger, value, boxC.id, comp.id);
           }
         });
       } else {
-        const value = typeof comp.id != "undefined" && typeof data[comp.id] != "undefined" ? data[comp.id] : undefined;
+        const value =
+          typeof comp.id != "undefined" && typeof data[comp.id] != "undefined"
+            ? data[comp.id]
+            : undefined;
         const prevValue =
           typeof comp.id != "undefined" && typeof prevData.current[comp.id] != "undefined"
             ? prevData.current[comp.id]
             : undefined;
 
-        // if (typeof comp.trigger != "undefined") console.log({ value, prevValue });
-
-        if (firstRender.current || (value != prevValue && typeof comp.trigger != "undefined")) {
-          triggerComponent(comp.trigger, value);
+        if (
+          firstRender.current ||
+          (JSON.stringify(value) != JSON.stringify(prevValue) && typeof comp.trigger != "undefined")
+        ) {
+          triggerComponent(comp.trigger, value, comp.id);
         }
       }
     });
@@ -427,7 +483,12 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     } else {
       checkIfCanContinue();
     }
-  }, [props.canContinue, JSON.stringify(props.data), JSON.stringify(props.content)]);
+  }, [
+    props.canContinue,
+    JSON.stringify(props.data),
+    JSON.stringify(props.content),
+    JSON.stringify(hiddenComponents),
+  ]);
 
   const onChange = useCallback(
     (component: ScreenDrawerComponent, newValue: any, box_id?: string) => {
@@ -451,14 +512,18 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
             .toString()
             .split("/")
             .filter((x) => x != "");
-          let toReturn: any = { ...prevState };
+
+          if (typeof prevState == "undefined") return {};
+
+          let toReturn: any = Object.create(prevState);
 
           paths.reduce((parent, path, k, array) => {
             if (k === array.length - 1) {
               parent[path] = newValue;
-            } else if (typeof parent[path] != "object") {
+            } else if (typeof parent[path] != "object" && !Array.isArray(parent[path])) {
               parent[path] = {};
             }
+
             return parent[path];
           }, toReturn);
 
@@ -466,7 +531,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
         });
       }
     },
-    [JSON.stringify(props.path)]
+    [props.path]
   );
 
   const shouldRender = useCallback(
@@ -484,8 +549,6 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
           path = `${box_id}/${component.id}`;
         }
 
-        // console.log(hiddenComponents, path, !hiddenComponents.includes(path))
-
         if (hiddenComponents.includes(path)) toReturn = false;
       }
 
@@ -495,47 +558,72 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   );
 
   const checkIfCanContinue = () => {
-    if (typeof props.content == "undefined" || typeof props.data == "undefined") return;
+    if (typeof props.content == "undefined" || typeof props.data == "undefined") {
+      setCanContinue(false);
+      if (typeof props.onChange != "undefined") {
+        props.onChange({ canContinue: false });
+      }
+      return;
+    }
 
-    if (!Array.isArray(props.content) || props.content.length == 0 || typeof props.onChange == "undefined") return;
+    if (
+      !Array.isArray(props.content) ||
+      props.content.length == 0 ||
+      typeof props.onChange == "undefined"
+    ) {
+      setCanContinue(false);
+      if (typeof props.onChange != "undefined") {
+        props.onChange({ canContinue: false });
+      }
+      return;
+    }
 
     let canContinue: boolean = true;
 
     props.content.forEach((field) => {
       if (field.component == "text") return;
 
+      if (typeof field.id !== "undefined" && hiddenComponents.indexOf(field.id) >= 0) {
+        return;
+      }
+
       if (field.component == "box") {
         //
 
         field.content.forEach((x) => {
-          //@ts-ignore It's ok, but not for Typescript
-          if (x.required && x.id) {
-            const x_data = props.data[x.id];
+          //@ts-ignore It's ok, but not for Td
 
-            if (typeof x_data == "undefined" || x_data.toString().trim() == "") {
+          if (x.required && x.id) {
+            try {
+              var x_data =
+                typeof field.id !== "undefined" ? props.data[field.id][x.id] : props.data[x.id];
+
+              if (typeof x_data == "undefined" || x_data.toString().trim() == "") {
+                canContinue = false;
+              }
+            } catch (e) {
               canContinue = false;
             }
           }
         });
       }
 
-      //@ts-ignore It's ok, but not for Typescript
-      if (field.required && field.id) {
-        let field_data = props.data[field.id];
+      if (typeof field.required === "undefined" || !field.required) return;
 
-        if (typeof field_data == "string") {
-          const prefix = field_data[0];
+      let field_data = props.data[field.id];
 
-          if (prefix == '"') {
-            //is JSON
+      if (typeof field_data == "string") {
+        const prefix = field_data[0];
 
-            field_data = JSON.parse(field_data);
-          }
+        if (prefix == '"') {
+          //is JSON
+
+          field_data = JSON.parse(field_data);
         }
+      }
 
-        if (typeof field_data == "undefined" || field_data.toString().trim() == "") {
-          canContinue = false;
-        }
+      if (typeof field_data == "undefined" || field_data.toString().trim() == "") {
+        canContinue = false;
       }
     });
 
@@ -543,80 +631,148 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     return props.onChange({ canContinue });
   };
 
-  const triggerComponent = (trigger: any, newValue: any, box_id?: string) => {
-    if (typeof trigger != "undefined") {
-      if (typeof trigger.target == "string") {
-        setHiddenComponents((prevState) => {
-          let path = typeof box_id != "undefined" ? `${box_id}/${trigger.target}` : trigger.target;
+  const triggerComponent = (trigger: any, newValue: any, id: string, box_id?: string) => {
+    if (typeof trigger === "undefined") {
+      return;
+    }
 
-          if (typeof trigger.value != "undefined") {
-            if (trigger.value == newValue) {
-              return [...prevState, path];
-            } else {
-              return prevState.filter((x) => x != path);
-            }
+    if (typeof trigger.target === "string") {
+      trigger.target = [trigger.target];
+    }
+
+    if (Array.isArray(trigger.target)) {
+      var toShow = false;
+      if (typeof newValue === "undefined") toShow = false;
+      else if (typeof newValue === "boolean") toShow = newValue;
+      else if (typeof newValue === "string") toShow = newValue.length > 0;
+      else if (typeof newValue === "object") toShow = Object.keys(newValue).length > 0;
+      else toShow = newValue.toString() === "1";
+
+      setHiddenComponents((prevState) => {
+        let toReturn = [...prevState];
+
+        trigger.target.forEach((trg: string) => {
+          let path = typeof box_id != "undefined" ? `${box_id}/${trg}` : trg;
+
+          if (toShow) {
+            toReturn = toReturn.filter((x) => x != path);
+          } else {
+            toReturn.push(path);
           }
-
-          if (typeof trigger.value == "undefined") {
-            if (prevState.includes(path)) {
-              return prevState.filter((x) => x != path);
-            }
-
-            return [...prevState, path];
-          }
-
-          return [];
         });
-      }
 
-      if (Array.isArray(trigger.target) && trigger.target.length > 0) {
-        setHiddenComponents((prevState) => {
-          let toReturn = [...prevState];
+        // alert(JSON.stringify(toReturn))
+        return toReturn;
+      });
+    } else {
+      if (typeof newValue == "undefined" || newValue == null || Object.keys(newValue).length == 0) {
+        Object.keys(trigger.target).forEach((key) => {
+          const newHiddenComponents: string[] = trigger.target[key];
+          if (typeof newHiddenComponents == "object") {
+            newHiddenComponents.forEach((hc) => {
+              setHiddenComponents((prevState) => {
+                let toReturn = [...prevState];
 
-          trigger.target.forEach((trg: string) => {
-            let path = typeof box_id != "undefined" ? `${box_id}/${trg}` : trg;
+                const index = prevState.findIndex((x) => x == hc);
 
-            if (prevState.includes(path)) {
-              toReturn = toReturn.filter((x) => x != path);
-            } else {
-              toReturn.push(path);
-            }
-          });
-
-          // alert(JSON.stringify(toReturn))
-          return toReturn;
-        });
-      }
-
-      if (typeof trigger.target == "object" && !Array.isArray(trigger.target)) {
-        //is object
-        if (typeof newValue == "object") {
-          if (typeof props.setData != "undefined") {
-            props.setData((prevState: any) => {
-              let toReturn = prevState;
-
-              Object.keys(trigger.target).map((key) => {
-                if (typeof prevState[key] != "undefined" && typeof newValue[key] != "undefined") {
-                  toReturn = {
-                    ...toReturn,
-                    [key]: newValue[key],
-                  };
+                if (index >= 0) {
+                  toReturn.splice(index, 1);
+                } else {
+                  toReturn.push(hc);
                 }
+
+                return toReturn;
               });
             });
           }
-        }
+
+          if (typeof newHiddenComponents == "string") {
+            if (!hiddenComponents.includes(newHiddenComponents)) {
+              setHiddenComponents((prevState) => [...prevState, newHiddenComponents]);
+            }
+          }
+        });
+      } else {
+        Object.keys(trigger.target).forEach((key) => {
+          const value_target: string | string[] = trigger.target[key];
+
+          if (typeof newValue == "object") {
+            //array
+            if (newValue.includes(key)) {
+              if (hiddenComponents.includes(value_target)) {
+                setHiddenComponents((prevState) => prevState.filter((x) => x != value_target));
+              }
+            } else {
+              if (!hiddenComponents.includes(value_target)) {
+                setHiddenComponents((prevState) => [...prevState, value_target]);
+              }
+            }
+          }
+        });
       }
+
+      // Object.keys(trigger.target).forEach((key) => {
+      //   if (typeof key != "undefined" && key != "") {
+
+      //     if (Array.isArray(newValue) && newValue.some((x) => x.toString() == key.toString())) {
+      //       const newHiddenComponents: string[] | string = trigger.target[key];
+
+      //       if (typeof newHiddenComponents == "object") {
+      //         newHiddenComponents.forEach((hc) => {
+      //           setHiddenComponents((prevState) => {
+      //             let toReturn = [...prevState];
+
+      //             if (toReturn.includes(hc)) {
+      //               toReturn.splice(toReturn.indexOf(hc), 1);
+      //             } else {
+      //               toReturn.push(hc);
+      //             }
+
+      //             return toReturn;
+      //           });
+      //         });
+      //       }
+
+      //       if (typeof newHiddenComponents == "string") {
+      //         setHiddenComponents((prevState) => {
+      //           let toReturn = [...prevState];
+
+      //           console.log(prevState, trigger.target, key)
+
+      //           const index = prevState.findIndex((x) => x.toString() == trigger.target[key].toString());
+
+      //           if (index >= 0) {
+      //             toReturn.splice(index, 1);
+      //           } else {
+      //             toReturn.push(newHiddenComponents);
+      //           }
+
+      //           return toReturn;
+      //         });
+      //       }
+      //     }
+
+      //     if (typeof newValue == "string") {
+      //     }
+
+      //   }
+      // });
     }
   };
 
-  if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "cart") {
+  if (
+    typeof props.content != "undefined" &&
+    props.content.length > 0 &&
+    props.content[0].component == "cart"
+  ) {
     const cart = props.content[0];
     return (
       <Cart
         {...cart}
         data={
-          typeof props.data != "undefined" && typeof cart.id != "undefined" && typeof props.data[cart.id] != "undefined"
+          typeof props.data != "undefined" &&
+          typeof cart.id != "undefined" &&
+          typeof props.data[cart.id] != "undefined"
             ? props.data[cart.id]
             : undefined
         }
@@ -625,17 +781,54 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     );
   }
 
-  if (typeof props.content != "undefined" && props.content.length > 0 && props.content[0].component == "list") {
+  if (
+    typeof props.content != "undefined" &&
+    props.content.length > 0 &&
+    props.content[0].component == "list"
+  ) {
+    const flatlist = props.content[0];
+
+    let otherParams: any = {};
+
+    if (typeof flatlist.sendData != "undefined" && typeof props.data != "undefined") {
+      console.log({ sendData: flatlist.sendData, data: props.data });
+
+      flatlist.sendData.forEach((path) => {
+        let toReturn = Object.create(props.data);
+        let key = "";
+
+        path.split("/").forEach((value, index, array) => {
+          const isLast = index == array.length - 1;
+
+          if (typeof toReturn[value] != "undefined") {
+            toReturn = toReturn[value];
+          } else {
+            toReturn = undefined;
+          }
+
+          if (isLast) key = value;
+        });
+
+        if (typeof toReturn != "undefined" && key != "") {
+          otherParams = {
+            ...otherParams,
+            [key]: toReturn,
+          };
+        }
+      });
+    }
+
     return (
       <FlatList
-        {...props.content[0]}
+        {...flatlist}
         {...props.flatListProps}
+        mergeParams={{ data: Object.keys(otherParams).length > 0 ? otherParams : undefined }}
         ListHeaderComponent={
-          typeof props.content[0].header != "undefined" && props.content[0].header.length > 0 ? (
-            <ScreenDrawer content={props.content[0].header} />
+          typeof flatlist.header != "undefined" && flatlist.header.length > 0 ? (
+            <ScreenDrawer {...props} content={flatlist.header} />
           ) : undefined
         }
-        //enableDebugLogs={true}
+        enableDebugLogs={true}
       />
     );
   }
@@ -643,7 +836,12 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   if (typeof props.hasScroll != "undefined" && props.hasScroll == false) {
     return (
       <View
-        style={{ flexDirection: "row", flexWrap: "wrap", padding: hasMargin ? spacing / 2 : undefined, ...props.style }}
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          padding: hasMargin ? spacing / 2 : undefined,
+          ...props.style,
+        }}
       >
         {typeof props.content != "undefined" &&
           props.content.length > 0 &&
@@ -692,8 +890,9 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                               key={box_index}
                               style={{
                                 width:
-                                  (typeof box_component.windowSize !== "undefined" ? box_component.windowSize : 100) +
-                                  "%",
+                                  (typeof box_component.windowSize !== "undefined"
+                                    ? box_component.windowSize
+                                    : 100) + "%",
                                 padding: spacing / 2,
                               }}
                             >
@@ -726,7 +925,9 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                 <View
                   key={index}
                   style={{
-                    width: (typeof component.windowSize !== "undefined" ? component.windowSize : 100) + "%",
+                    width:
+                      (typeof component.windowSize !== "undefined" ? component.windowSize : 100) +
+                      "%",
                     padding: hasMargin ? spacing / 2 : undefined,
                     marginBottom: hasMargin ? spacing * 0.5 : undefined,
                   }}
@@ -755,9 +956,18 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
   }
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" scrollEnabled={props.scrollEnabled} {...props.scrollViewProps}>
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      scrollEnabled={props.scrollEnabled}
+      {...props.scrollViewProps}
+    >
       <View
-        style={{ flexDirection: "row", flexWrap: "wrap", padding: hasMargin ? spacing / 2 : undefined, ...props.style }}
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          padding: hasMargin ? spacing / 2 : undefined,
+          ...props.style,
+        }}
       >
         {typeof props.content != "undefined" &&
           props.content.length > 0 &&
@@ -806,8 +1016,9 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                               key={box_index}
                               style={{
                                 width:
-                                  (typeof box_component.windowSize !== "undefined" ? box_component.windowSize : 100) +
-                                  "%",
+                                  (typeof box_component.windowSize !== "undefined"
+                                    ? box_component.windowSize
+                                    : 100) + "%",
                                 padding: spacing / 2,
                               }}
                             >
@@ -840,7 +1051,9 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                 <View
                   key={index}
                   style={{
-                    width: (typeof component.windowSize !== "undefined" ? component.windowSize : 100) + "%",
+                    width:
+                      (typeof component.windowSize !== "undefined" ? component.windowSize : 100) +
+                      "%",
                     padding: hasMargin ? spacing / 2 : undefined,
                     marginBottom: hasMargin ? spacing * 0.5 : undefined,
                   }}

@@ -58,7 +58,9 @@ function RenderBadge({ ...props }: ImageProps["badge"]) {
         ...style,
       }}
     >
-      {typeof props.icon != "undefined" && <Icon name={props.icon} size={icon_size * 0.8} color="white" />}
+      {typeof props.icon != "undefined" && (
+        <Icon name={props.icon} size={icon_size * 0.8} color="white" />
+      )}
       {typeof props.text != "undefined" && (
         <Text numberOfLines={1} size="xs" style={{ color: "white" }}>
           {props.text}
@@ -73,13 +75,17 @@ function Image({ ...props }: ImageProps) {
   const currentConfig = config.getConfig();
   const defaultSource = currentConfig.images.icon;
 
+  const [source, setSource] = useState<ImageProps["source"]>(
+    props.source != "" ? props.source : undefined
+  );
+
   useEffect(() => {
-    if (typeof props.source == "string" && props.source.length > 10) {
-      setError(false);
+    if (typeof props.source == "undefined" || props.source == null || props.source == "") {
+      onError(undefined);
     } else {
-      onError();
+      setError(false);
     }
-  }, []);
+  }, [JSON.stringify(props.source)]);
 
   const hasBadge = useMemo(() => {
     if (typeof keyExist(props.badge) == "undefined") return false;
@@ -87,23 +93,20 @@ function Image({ ...props }: ImageProps) {
     return true;
   }, [JSON.stringify(props.badge)]);
 
-  const onError = () => {
+  const onError = (e: any) => {
     setError(true);
+    setSource(defaultSource);
+  };
+
+  const onLoad = () => {
+    setError(false);
+    setSource(props.source)
+
   };
 
   return (
     <>
-      <DefaultImage
-        {...props}
-        source={
-          error == false ||
-          typeof props.source == "number" ||
-          (typeof props.source == "string" && props.source.length > 10)
-            ? props.source
-            : defaultSource
-        }
-        onError={onError}
-      />
+      <DefaultImage {...props} source={source} onError={onError} onLoad={onLoad} />
       {hasBadge && <RenderBadge {...props.badge} />}
     </>
   );

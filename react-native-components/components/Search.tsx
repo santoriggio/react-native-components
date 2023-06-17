@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TouchableHighlight, View, TouchableOpacity } from "react-native";
 import sendApiRequest from "../functions/sendApiRequest";
 import useLayout from "../hooks/useLayout";
-import { ModuleProps } from "../types";
+import { ModuleProps, SearchProps } from "../types";
 import Button from "./Button";
 import Icon from "./Icon";
 import ListItem from "./ListItem";
@@ -10,26 +10,19 @@ import { SearchPickerController } from "./SearchPicker";
 import Text from "./Text";
 
 import triggerAction from "../functions/triggerAction";
-function Module({
+function Search({
   required = false,
   limit = 1,
-  global = 0,
   value,
   onChange = () => {},
-  module = "contenuti_media",
+  type,
   placeholder = "Aggiungi",
   ...props
-}: ModuleProps & { value: any; onChange?: (newId: any) => void }) {
+}: SearchProps & { value: any; onChange?: (newId: any) => void }) {
   const { spacing, icon_size, radius, Colors } = useLayout();
   const [data, setData] = useState<any[] | undefined>(undefined);
 
-  const [imagesFormatted, setImagesFormatted] = useState<any>(undefined);
-
   useEffect(() => {
-    if (module == "contenuti_media" && typeof value != "undefined" && value != "") {
-      setImagesFormatted(value);
-    }
-
     if (
       typeof value != "undefined" &&
       value != "" &&
@@ -41,98 +34,38 @@ function Module({
 
   const getData = async () => {
     //get record from id
-
-    if (module == "contenuti_media") {
-      const apiResult = await sendApiRequest("/media/format", { files: value, global });
-
-      if (typeof apiResult.error != "undefined") {
-        return;
-      }
-
-      const format = apiResult.data;
-
-      setData(
-        format.map((x: any) => {
-          if (typeof x.return != "undefined" && typeof x.return.format != "undefined") {
-            return x.return.format;
-          }
-
-          if (typeof x.format != "undefined") {
-            return x.format;
-          }
-
-          return x;
-        })
-      );
-      return;
-    }
-
-    const apiResult = await sendApiRequest("/modules/records", {
-      module_id: module,
+    const apiResult = await sendApiRequest("/search/list", {
+      type,
       id: value,
-      params: { global, ...props.params },
+      params: props.params,
     });
 
     if (typeof apiResult.error != "undefined") {
       return;
     }
 
-    const record = apiResult.data.data;
-
-    record.forEach((x) => {
-      if (typeof x.action != "undefined") {
-        triggerAction(x.action);
-      }
-    });
+    const record = apiResult.data;
 
     setData(record);
   };
 
   const openPicker = () => {
     SearchPickerController.show({
-      type: "modulepicker",
-      preselected:
-        typeof data != "undefined"
-          ? data.map((x, id) => {
-              return {
-                ...x,
-                data: value[id],
-                format: {
-                  ...x,
-                },
-              };
-            })
-          : [],
-      module_id: module,
-      global,
       limit,
+      preselected: data,
       content: [
         {
           component: "list",
-          endpoint: "/modules/records",
-          path: "data/data",
+          endpoint: "/search/list",
+          path: "data",
           params: {
-            module_id: module,
-            params: { global, ...props.params },
+            type,
+            ...props.params,
           },
         },
       ],
-      onSuccess: (selected, id) => {
-        if (module == "contenuti_media") {
-          onChange(
-            selected.map((x) => {
-              if (typeof x.return != "undefined" && typeof x.return.data != "undefined") {
-                return x.return.data;
-              }
-
-              if (typeof x.data != "undefined") {
-                return x.data;
-              }
-
-              return x;
-            })
-          );
-        } else if (limit == 1) {
+      onSuccess: (selected: any, id: any) => {
+        if (limit == 1) {
           onChange(id[0]);
         } else {
           onChange(id);
@@ -170,7 +103,7 @@ function Module({
           if (typeof x.content != "undefined") {
             return (
               <ListItem
-                key={id}
+                key={x.id}
                 {...x}
                 onPress={openPicker}
                 selected={undefined}
@@ -181,7 +114,7 @@ function Module({
                   marginBottom: spacing,
                 }}
                 right={
-                  <View style={{}}>
+                  <View>
                     <TouchableOpacity
                       onPress={() => {
                         if (limit == 1) {
@@ -190,28 +123,18 @@ function Module({
                           return;
                         }
 
-                        if (module == "contenuti_media") {
-                          if (typeof imagesFormatted != "undefined") {
-                            if (typeof onChange != "undefined") {
-                              let filtered = [...imagesFormatted];
-                              filtered.splice(id, 1);
-                              onChange(filtered);
-                            }
-                          }
-                        } else {
-                          onChange(data.map((s) => s.id));
-                        }
-
                         setData((prevState) => {
                           if (typeof prevState != "undefined") {
-                            prevState.forEach((h) => {
-                              console.log(h.id, x.id);
-                            });
-
                             return prevState.filter((z) => z.id != x.id);
                           }
                           return prevState;
                         });
+
+                     
+
+                        const formatted = value.filter((z: any) => z != x.id)
+                                              
+                        onChange(formatted);
                       }}
                       activeOpacity={0.5}
                       style={{ padding: spacing }}
@@ -246,4 +169,4 @@ function Module({
   );
 }
 
-export default Module;
+export default Search;

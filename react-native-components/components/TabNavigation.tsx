@@ -48,8 +48,6 @@ const TabBar = ({ ...props }: TabBarProps) => {
   };
 
   const renderItem: ListRenderItem<any> = ({ item, index }) => {
-    if (typeof item.hidden != "undefined" && item.hidden == true) return null;
-    
     return (
       <AnimatedTouchableOpacity
         key={index}
@@ -81,7 +79,8 @@ const TabBar = ({ ...props }: TabBarProps) => {
           <Text
             numberOfLines={1}
             style={{
-              marginLeft: typeof item.icon != "undefined" && item.icon != "" ? spacing * 0.5 : undefined,
+              marginLeft:
+                typeof item.icon != "undefined" && item.icon != "" ? spacing * 0.5 : undefined,
             }}
           >
             {item.title}
@@ -101,7 +100,14 @@ const TabBar = ({ ...props }: TabBarProps) => {
               bottom: spacing * 0.2,
             }}
           >
-            <View style={{ height: "100%", width: "60%", backgroundColor: Colors.primary, borderRadius: 10 }} />
+            <View
+              style={{
+                height: "100%",
+                width: "60%",
+                backgroundColor: Colors.primary,
+                borderRadius: 10,
+              }}
+            />
           </Animated.View>
         )}
       </AnimatedTouchableOpacity>
@@ -180,10 +186,10 @@ function TabNavigation({ ...props }: TabNavigationProps) {
   }, []);
 
   const renderItem: ListRenderItem<any> = ({ item, index }) => {
-    if (typeof item.hidden != "undefined" && item.hidden == true) return null;
-
     const data =
-      typeof props.data != "undefined" && typeof props.data[item.id] != "undefined" ? props.data[item.id] : {};
+      typeof props.data != "undefined" && typeof props.data[item.id] != "undefined"
+        ? props.data[item.id]
+        : {};
 
     return (
       <View style={{ width }}>
@@ -222,6 +228,7 @@ function TabNavigation({ ...props }: TabNavigationProps) {
         renderItem={renderItem}
         initialNumToRender={1}
         horizontal
+        canRefresh={false}
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         getItemLayout={getItemLayout}

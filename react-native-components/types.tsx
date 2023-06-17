@@ -41,13 +41,15 @@ type CustomFlatListProps = {
       message?: string;
     };
   };
+  sendData?: string[];
+  setSelected?: any;
   selected?: any[];
   keysPath?: {
     path: string;
     onKeyFound: (data: any) => void;
   }[];
 
-  onLoadEnd?: () => void;
+  onLoadEnd?: (result: any) => void;
 
   onPressItem?: (item: any) => void;
   onLongPressItem?: (item: any) => void;
@@ -241,9 +243,12 @@ export interface InputProps {
   size?: keyof typeof sizes;
   required?: boolean | 0 | 1;
   value?: any;
-  onChange?: (newValue: any) => void;
+  onChange?: (newValue: any, details?: any) => void;
   box_id?: string;
   active?: boolean;
+  detailsPath?: {
+    [key: string]: string;
+  };
   textContentType?: DefaultTextInputProps["textContentType"];
   suffix?: {
     text?: string;
@@ -356,6 +361,16 @@ export type ModuleProps = {
   global?: boolean | 0 | 1;
 };
 
+export type SearchProps = {
+  type?: string[];
+  title?: string;
+  placeholder?: string;
+  required?: boolean | 1 | 0;
+  limit?: number;
+  params?: any;
+  icon?: string;
+};
+
 export type SkeletonPlaceholderComponent = {
   height?: number;
   radius?: number;
@@ -449,7 +464,9 @@ export type ButtonsListButtonProps = {
    *
    */
 
-  component?: ((button: ButtonsListButtonProps) => JSX.Element | undefined | null) | ButtonsListSwitch;
+  component?:
+    | ((button: ButtonsListButtonProps) => JSX.Element | undefined | null)
+    | ButtonsListSwitch;
 };
 
 export type ButtonsListProps = {
