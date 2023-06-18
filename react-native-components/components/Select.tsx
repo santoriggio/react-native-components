@@ -93,7 +93,7 @@ function Select(props: SelectProps) {
     }
 
     return toReturn;
-  }, [JSON.stringify(selectedItem)]);
+  }, [JSON.stringify(selectedItem), JSON.stringify(items)]);
 
   const flag = Flags.filter((x) => x.name == selectedItem);
 

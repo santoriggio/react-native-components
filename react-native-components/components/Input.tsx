@@ -185,7 +185,14 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
     }
 
     if (component.type == "date" || component.type === "datetime" || component.type === "time") {
-      return <DateTimePicker date={data} onChangeDate={onChangeInput} mode={component.type} />;
+      return (
+        <DateTimePicker
+          date={data}
+          minimumDate={component.minimumDate}
+          onChangeDate={onChangeInput}
+          mode={component.type}
+        />
+      );
     }
 
     if (component.type == "html") {

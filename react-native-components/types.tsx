@@ -242,6 +242,10 @@ export interface InputProps {
   link?: string;
   size?: keyof typeof sizes;
   required?: boolean | 0 | 1;
+  minimumDate?: Date;
+  minimumValue?: number;
+  maximumValue?: number;
+  step?: number;
   value?: any;
   onChange?: (newValue: any, details?: any) => void;
   box_id?: string;
