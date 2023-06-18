@@ -1,6 +1,6 @@
 {
   "name": "@santoriggio/react-native-components",
-  "version": "1.0.99",
+  "version": "1.0.100",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",

@@ -7,6 +7,8 @@ import useLayout from "../hooks/useLayout";
 import Text from "./Text";
 
 interface IProps {
+  minimumDate?: Date;
+  maximumDate?: Date;
   date: string | number;
   onChangeDate: (newDate: Date) => void;
   mode?: "date" | "datetime" | "time";
@@ -64,7 +66,9 @@ function DateTimePicker({ ...props }: IProps) {
       onPress={toggle}
     >
       {typeof formatted !== "undefined" && formatted !== null ? (
-        <Text>{formatDate(formatted, props.mode === "date" ? "DD/MM/YYYY" : "DD/MM/YYYY hh:mm", "iso")}</Text>
+        <Text>
+          {formatDate(formatted, props.mode === "date" ? "DD/MM/YYYY" : "DD/MM/YYYY hh:mm", "iso")}
+        </Text>
       ) : (
         <Text style={{ color: Colors.gray }}>Seleziona una data</Text>
       )}
@@ -72,10 +76,14 @@ function DateTimePicker({ ...props }: IProps) {
         modal
         open={show}
         theme={Colors.isDark ? "dark" : "light"}
-        date={typeof formatted !== "undefined" && formatted !== null ? new Date(formatted) : new Date()}
+        date={
+          typeof formatted !== "undefined" && formatted !== null ? new Date(formatted) : new Date()
+        }
         title="Seleziona una data"
         confirmText="Conferma"
         locale="it"
+        minimumDate={props.minimumDate}
+        maximumDate={props.maximumDate}
         textColor={Colors.text}
         mode={props.mode}
         cancelText="Annulla"
