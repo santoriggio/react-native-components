@@ -76,6 +76,7 @@ const PhoneInput: FC<IProps> = ({ value, size, onChange, input_container_style }
         flexDirection: "row",
         alignItems: "center",
         ...input_container_style,
+        height: spacing * 4.3,
       }}
     >
       <TouchableOpacity

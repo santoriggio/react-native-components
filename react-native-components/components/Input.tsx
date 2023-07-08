@@ -117,10 +117,30 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
           onPress={(data, details) => {
             if (details !== null && typeof details.geometry !== "undefined") {
               const location = details.geometry.location;
+
+              let extras = {
+                locality: undefined,
+                administrative_area_level_3: undefined,
+                administrative_area_level_2: undefined,
+                administrative_area_level_1: undefined,
+              };
+
+              details.address_components.forEach((comp) => {
+                comp.types.forEach((type) => {
+                  extras = {
+                    ...extras,
+                    [type]: comp.short_name,
+                  };
+                });
+              });
+
               let obj = {
                 lat: location.lat,
                 lng: location.lng,
+                ...extras,
               };
+
+              console.log(obj);
 
               if (onChange) onChangeInput(data.description, obj);
             }

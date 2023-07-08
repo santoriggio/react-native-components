@@ -28,6 +28,7 @@ export { default as Select } from "./components/Select";
 export { Storage, Cache } from "./utils/Storages";
 export { default as sendApiRequest } from "./functions/sendApiRequest";
 export { default as triggerAction } from "./functions/triggerAction";
+export { default as uploadMedia } from "./functions/uploadMedia";
 export { default as keyExist } from "./functions/keyExist";
 export { default as useCachedResources } from "./hooks/useCachedResources";
 export { default as Message, MessageController } from "./components/Message";

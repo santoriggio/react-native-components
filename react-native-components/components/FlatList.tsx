@@ -205,6 +205,8 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
         return props.renderItem;
       }
 
+      const isLast = typeof data != "undefined" && typeof data[index + 1] == "undefined";
+
       return (
         <ListItem
           onPress={onPressItem}
@@ -213,6 +215,7 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
           selected={
             typeof selected != "undefined" ? selected.some((x) => x.id == item.id) : undefined
           }
+          isLast={isLast}
           {...item}
         />
       );

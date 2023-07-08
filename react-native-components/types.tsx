@@ -281,10 +281,10 @@ export interface TextInputProps extends DefaultTextInputProps {
   bold?: boolean;
 }
 
-export interface SliderProps {
+export interface SliderProps<T> {
   style?: ViewStyle;
-  data?: any[];
-  renderItem?: any;
+  data?: T[];
+  renderItem: (item: T, index: number) => JSX.Element;
   width?: number;
   height?: number;
   isLoading?: boolean;

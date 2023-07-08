@@ -207,7 +207,8 @@ function Select(props: SelectProps) {
                     <Checkbox isChecked={isSelected(key)} style={{ marginRight: spacing }} />
                   )}
                   {typeof item == "object" &&
-                    (typeof item.type == "undefined" || item.type == "bullet") && (
+                    typeof item.type != "undefined" &&
+                    item.type == "bullet" && (
                       <View
                         style={{
                           height: spacing,

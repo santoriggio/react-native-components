@@ -40,6 +40,7 @@ import { launchImageLibrary } from "react-native-image-picker";
 import { Storage } from "../utils/Storages";
 import FlatList from "./FlatList";
 import { Flags } from "../utils/Flags";
+import uploadMedia from "../functions/uploadMedia";
 
 /**
  
@@ -145,23 +146,18 @@ function SearchPicker() {
       setModalVisible(true);
 
       if (typeof option != "undefined") {
-        
-          
-          const { limit = 1, ...other } = option;
-         
+        const { limit = 1, ...other } = option;
 
-          if (limit == 1) {
-            setSelected(undefined);
-          } else {
-         
-            if (
-              typeof option.preselected != "undefined" &&
-              Object.keys(option.preselected).length > 0
-            ) {
-              setSelected(option.preselected);
-            }
+        if (limit == 1) {
+          setSelected(undefined);
+        } else {
+          if (
+            typeof option.preselected != "undefined" &&
+            Object.keys(option.preselected).length > 0
+          ) {
+            setSelected(option.preselected);
           }
-        
+        }
 
         setOptions((prevState) => {
           setTimeout(() => {
@@ -221,53 +217,17 @@ function SearchPicker() {
     }
   }, [JSON.stringify(selected)]);
 
-  const uploadMedia = async ({ mediaType, media, global, limit = 25 }: any) => {
-    if (mediaType === "image") {
-      const options: any = {
-        mediaType: "photo",
-        selectionLimit: limit,
-        includeBase64: false,
-        maxHeight: 1980,
-        maxWidth: 1980,
-        quality: 0.8,
-      };
-
-      const result = await launchImageLibrary(options);
-
-      if (result.didCancel || typeof result.assets === "undefined") return;
-
-      const assets = result.assets;
-
-      const e = Storage.get("environment");
-
-      let formatted = assets.map((asset) => {
-        return {
-          ...asset,
-          environment: e,
-          global,
-        };
-      });
-
-      const hasMediaToUpload: any[] | undefined = Storage.get("mediaToUpload");
-
-      if (typeof hasMediaToUpload !== "undefined" && hasMediaToUpload.length > 0) {
-        formatted = [...hasMediaToUpload, ...formatted];
-      }
-
-      return Storage.set("mediaToUpload", formatted);
-    } else if (mediaType === "file") {
-    }
-  };
-
   const lastOption: Options = options.length > 0 ? options[options.length - 1] : { content: [] };
 
   const getTabs = async (m: string) => {
     if (m == "contenuti_media") {
-      return uploadMedia({
-        mediaType: "image",
-        global: lastOption.global,
-        limit: lastOption.limit,
-      });
+      return uploadMedia(
+        {
+          mimetype: lastOption.mimetype,
+          limit: lastOption.limit,
+        },
+        lastOption.global
+      );
     }
 
     SearchPickerController.show({
@@ -462,8 +422,6 @@ const CustomScreen = forwardRef<any, any>(
     const [flags, setFlags] = useState<any>(Flags);
 
     const [canContinue, setCanContinue] = useState<boolean>(false);
-
-
 
     useEffect(() => {
       if (option.type == "flag") {

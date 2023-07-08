@@ -92,16 +92,13 @@ function EditorHTML({ ...props }: any) {
     // this.richText.current?.insertImage(`data:${image.mime};base64,${image.data}`);
   }, []);
 
-  const handleFontSize = useCallback(() => {
-    // 1=  10px, 2 = 13px, 3 = 16px, 4 = 18px, 5 = 24px, 6 = 32px, 7 = 48px;
+  const handleFontSize = () => {
     const obj: any = {
-      1: "10px",
-      2: "13px",
-      3: "16px",
-      4: "18px",
-      5: "24px",
-      6: "32px",
-      7: "48px",
+      heading1: "H1",
+      heading2: "H2",
+      heading3: "H3",
+      heading4: "H4",
+      heading5: "H5",
     };
 
     let formatted: ScreenDrawerComponent[] = [
@@ -125,7 +122,22 @@ function EditorHTML({ ...props }: any) {
         },
         action: () => {
           setSettingsVisible(false);
-          richText.current?.setFontSize(key);
+
+          if (key == "heading1") {
+            return richText.current?.sendAction(actions.heading1, "result");
+          }
+          if (key == "heading2") {
+            return richText.current?.sendAction(actions.heading2, "result");
+          }
+          if (key == "heading3") {
+            return richText.current?.sendAction(actions.heading3, "result");
+          }
+          if (key == "heading4") {
+            return richText.current?.sendAction(actions.heading4, "result");
+          }
+          if (key == "heading5") {
+            return richText.current?.sendAction(actions.heading5, "result");
+          }
         },
       };
 
@@ -134,7 +146,7 @@ function EditorHTML({ ...props }: any) {
 
     setSettings(formatted);
     setSettingsVisible(true);
-  }, []);
+  };
 
   const headerLeft = useMemo(() => {
     return (
@@ -147,7 +159,12 @@ function EditorHTML({ ...props }: any) {
           setVisible(false);
         }}
         activeOpacity={0.5}
-        style={{ height: spacing * 4, paddingHorizontal: spacing, justifyContent: "center", alignItems: "center" }}
+        style={{
+          height: spacing * 4,
+          paddingHorizontal: spacing,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
         <Text size="l" bold style={{ color: Colors.info }}>
           Fine
@@ -155,10 +172,6 @@ function EditorHTML({ ...props }: any) {
       </TouchableOpacity>
     );
   }, [contentHtml, JSON.stringify(options)]);
-
-  const add = useCallback(() => {
-    // alert("ciao");
-  }, []);
 
   const all = () => {
     setSettings([
@@ -387,25 +400,6 @@ function EditorHTML({ ...props }: any) {
     setSettingsVisible(true);
   };
 
-  const editText = () => {};
-
-  const headerRight = useMemo(() => {
-    return (
-      <RichToolbar
-        ref={richText}
-        iconTint={Colors.gray}
-        actions={[actions.undo, actions.redo, "add"]}
-        style={{ backgroundColor: "transparent" }}
-        iconMap={{
-          add: () => {
-            return <Icon name="add" size={icon_size * 1.2} color={Colors.gray} />;
-          },
-        }}
-        add={add}
-      />
-    );
-  }, []);
-
   return (
     <Modal
       visible={visible}
@@ -434,7 +428,11 @@ function EditorHTML({ ...props }: any) {
             // onLoadEnd={(e) => {
             //   richText.current?.blurContentEditor();
             // }}
-            placeholder={typeof props.placeholder != "undefined" ? props.placeholder : "Inserisci qui il testo..."}
+            placeholder={
+              typeof props.placeholder != "undefined"
+                ? props.placeholder
+                : "Inserisci qui il testo..."
+            }
             originWhitelist={["*"]}
             // androidHardwareAccelerationDisabled
             initialContentHTML={initialHtml}
@@ -454,8 +452,11 @@ function EditorHTML({ ...props }: any) {
           actions={[
             actions.undo,
             actions.redo,
-            "fontSize",
+            "divisor",
+            "heading",
+            actions.setParagraph,
             actions.setBold,
+
             actions.setItalic,
             // actions.setStrikethrough,
             // actions.checkboxList,
@@ -471,18 +472,32 @@ function EditorHTML({ ...props }: any) {
           onPressAddImage={onPressAddImage}
           style={{
             height: spacing * 5.5,
+            backgroundColor: "transparent",
+            borderTopWidth: 1,
+            borderColor: Colors.border,
           }}
-          flatContainerStyle={{ paddingHorizontal: spacing, marginBottom: spacing * 1.5 }}
+          flatContainerStyle={{
+            paddingHorizontal: spacing,
+            marginBottom: Platform.OS == "android" ? 0 : spacing * 1.5,
+          }}
           iconMap={{
-            fontSize: () => {
-              return <Icon name="font" size={icon_size * 1.2} color={Colors.gray} />;
+            paragraph: () => {
+              return <Icon name="paragraph" size={icon_size * 1.2} color={Colors.gray} />;
+            },
+            divisor: () => {
+              return (
+                <View style={{ height: spacing * 2, width: 2, backgroundColor: Colors.gray }} />
+              );
+            },
+            heading: () => {
+              return <Icon name="format-size" size={icon_size * 1.2} color={Colors.gray} />;
             },
             all: () => {
               return <Icon name="ellipsis-horizontal" size={icon_size * 1.2} color={Colors.gray} />;
             },
           }}
           all={all}
-          fontSize={handleFontSize}
+          heading={handleFontSize}
         />
       </KeyboardAvoidingView>
       <Modal

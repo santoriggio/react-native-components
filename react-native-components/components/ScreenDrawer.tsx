@@ -25,6 +25,7 @@ import AppSettings from "../utils/AppSettings";
 import deepMerge from "../functions/deepMerge";
 import getColor from "../functions/getColor";
 import Search from "./Search";
+import { PreventRemoveProvider } from "@react-navigation/native";
 
 interface I {
   data?: any;
@@ -37,8 +38,40 @@ interface I {
   canContinue?: boolean | 0 | 1;
 }
 
-const RenderComponent = memo(({ component, ...props }: I) => {
+const RenderComponent = ({ component, ...props }: I) => {
   const { spacing, icon_size, fontSize, radius, Colors } = useLayout();
+
+  const [otherParams, setOtherParams] = useState<any>({});
+
+  useEffect(() => {
+    if (typeof component.sendData != "undefined" && typeof props.data != "undefined") {
+      component.sendData.forEach((path) => {
+        let toReturn = Object.create(props.data);
+        let key = "";
+
+        path.split("/").forEach((value, index, array) => {
+          const isLast = index == array.length - 1;
+
+          if (typeof toReturn[value] != "undefined") {
+            toReturn = toReturn[value];
+          } else {
+            toReturn = undefined;
+          }
+
+          if (isLast) key = value;
+        });
+
+        if (typeof toReturn != "undefined" && key != "") {
+          setOtherParams((prevState: any) => {
+            return {
+              ...prevState,
+              [key]: toReturn,
+            };
+          });
+        }
+      });
+    }
+  }, [JSON.stringify(props.data)]);
 
   const customStyle = useMemo(() => {
     // @ts-ignore
@@ -389,10 +422,23 @@ const RenderComponent = memo(({ component, ...props }: I) => {
       return <Select {...component} selected={props.value} onChange={handleChange} />;
     case "buttonslist":
       return <ButtonsList {...component} />;
+    case "list":
+      return (
+        <FlatList
+          {...component}
+          contentContainerStyle={{
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: radius,
+            overflow: "hidden",
+          }}
+          mergeParams={{ data: Object.keys(otherParams).length > 0 ? otherParams : undefined }}
+        />
+      );
     default:
       return null;
   }
-});
+};
 
 function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: ScreenDrawerProps) {
   const { spacing, Colors, radius, fontSize } = useLayout();
@@ -523,6 +569,11 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
             } else if (typeof parent[path] != "object" && !Array.isArray(parent[path])) {
               parent[path] = {};
             }
+            //Questo codice non posso aggiungerlo
+            else if (Array.isArray(parent[path])) {
+              parent[path] = {};
+            }
+            //fine codice che non posso aggiungere
 
             return parent[path];
           }, toReturn);
@@ -598,7 +649,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
               var x_data =
                 typeof field.id !== "undefined" ? props.data[field.id][x.id] : props.data[x.id];
 
-              if (typeof x_data == "undefined" || x_data.toString().trim() == "") {
+              if (typeof x_data == "undefined" || x_data == "") {
                 canContinue = false;
               }
             } catch (e) {
@@ -622,7 +673,7 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
         }
       }
 
-      if (typeof field_data == "undefined" || field_data.toString().trim() == "") {
+      if (typeof field_data == "undefined" || field_data == "") {
         canContinue = false;
       }
     });
@@ -791,8 +842,6 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     let otherParams: any = {};
 
     if (typeof flatlist.sendData != "undefined" && typeof props.data != "undefined") {
-      console.log({ sendData: flatlist.sendData, data: props.data });
-
       flatlist.sendData.forEach((path) => {
         let toReturn = Object.create(props.data);
         let key = "";
@@ -1059,10 +1108,10 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
                   }}
                 >
                   <RenderComponent
-                    // data={drillProps ? props.data : undefined}
                     value={value}
                     component={component}
                     onChange={onChange}
+                    data={component.component == "list" ? props.data : undefined}
                     canContinue={
                       component.component == "button" &&
                       typeof component.checkData != "undefined" &&

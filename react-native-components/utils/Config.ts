@@ -6,7 +6,7 @@ export type ConfigOptions = {
   spacing: any;
   radius: any;
   query_change_time: number;
-  sizes: Partial<typeof sizes>;
+  sizes: typeof sizes;
   fonts: {
     bold?: string;
     regular?: string;

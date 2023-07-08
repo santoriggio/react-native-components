@@ -90,13 +90,14 @@ function Module({
 
   const openPicker = () => {
     SearchPickerController.show({
+      ...props,
       type: "modulepicker",
       preselected:
         typeof data != "undefined"
           ? data.map((x, id) => {
               return {
                 ...x,
-                data: value[id],
+                data: typeof value == "string" ? JSON.parse(value)[id] : value[id],
                 format: {
                   ...x,
                 },
@@ -170,7 +171,7 @@ function Module({
           if (typeof x.content != "undefined") {
             return (
               <ListItem
-                key={id}
+                key={x.id}
                 {...x}
                 onPress={openPicker}
                 selected={undefined}
@@ -193,7 +194,12 @@ function Module({
                         if (module == "contenuti_media") {
                           if (typeof imagesFormatted != "undefined") {
                             if (typeof onChange != "undefined") {
-                              let filtered = [...imagesFormatted];
+                              let filtered: string[] = [...imagesFormatted];
+
+                              if (typeof imagesFormatted == "string") {
+                                filtered = [...JSON.parse(imagesFormatted)];
+                              }
+
                               filtered.splice(id, 1);
                               onChange(filtered);
                             }
@@ -204,10 +210,6 @@ function Module({
 
                         setData((prevState) => {
                           if (typeof prevState != "undefined") {
-                            prevState.forEach((h) => {
-                              console.log(h.id, x.id);
-                            });
-
                             return prevState.filter((z) => z.id != x.id);
                           }
                           return prevState;

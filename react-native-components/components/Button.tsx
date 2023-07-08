@@ -1,21 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Action, ButtonProps, ButtonTypes } from "../types";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 import Text from "./Text";
 import keyExist from "../functions/keyExist";
 import Icon from "./Icon";
 import useLayout from "../hooks/useLayout";
-import * as Linking from "expo-linking";
-import sendApiRequest from "../functions/sendApiRequest";
-import { ScreenDrawerComponent } from "../ScreenDrawerTypes";
-import { BottomSheetController } from "./BottomSheet";
-import { SearchPickerController } from "./SearchPicker";
 import triggerAction from "../functions/triggerAction";
 import { MessageController } from "./Message";
 

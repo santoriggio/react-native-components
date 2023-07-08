@@ -8,7 +8,7 @@ function TextInput(props: TextInputProps) {
   const { size, bold, style, ...otherProps } = props;
   const { fontSize, Colors } = useLayout();
   const currentConfig = config.getConfig();
-  
+
   const hasRegular = typeof currentConfig.fonts.regular != "undefined";
   const hasBold = typeof currentConfig.fonts.bold != "undefined";
 
@@ -16,7 +16,12 @@ function TextInput(props: TextInputProps) {
     <DefaultTextInput
       style={[
         {
-          fontFamily: typeof props.bold != "undefined" && hasBold ? "bold" : hasRegular ? "regular" : undefined,
+          fontFamily:
+            typeof props.bold != "undefined" && hasBold
+              ? "bold"
+              : hasRegular
+              ? "regular"
+              : undefined,
           fontSize: fontSize(size),
           color: Colors.text,
           includeFontPadding: false,
@@ -24,8 +29,9 @@ function TextInput(props: TextInputProps) {
         style,
       ]}
       cursorColor={Colors.primary}
+      maxFontSizeMultiplier={1.3}
       selectionColor={Colors.primary}
-    placeholderTextColor={Colors.gray}
+      placeholderTextColor={Colors.gray}
       {...otherProps}
     />
   );

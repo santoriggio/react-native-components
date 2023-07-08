@@ -1,27 +1,21 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
 import {
   FlatList,
-  useWindowDimensions,
-  ViewStyle,
   NativeScrollEvent,
   NativeSyntheticEvent,
   View,
   ListRenderItem,
 } from "react-native";
 import useLayout from "../hooks/useLayout";
-import { SliderProps } from "../types";
 import Text from "./Text";
+import { SliderProps } from "../types";
 
-declare interface Slider {}
-
-const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
+export default function Slider<T>(props: SliderProps<T>) {
   const { spacing, icon_size, radius, Colors } = useLayout();
   const selectedRef = useRef<number>(0);
   const [page, setPage] = useState<number>(0);
 
   const [sliderWidth, setSliderWidth] = useState<number>(0);
-
-  useImperativeHandle(ref, () => ({}));
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -47,14 +41,6 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
     );
   };
 
-  const keyExtractor = (item: any, index: number) => {
-    if (typeof item.id != "undefined") {
-      return `${item.id}_${index}`;
-    }
-
-    return index;
-  };
-
   return (
     <View
       onLayout={(e) => {
@@ -73,7 +59,6 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
       ) : (
         <FlatList
           data={props.data}
-          keyExtractor={keyExtractor}
           renderItem={renderItem}
           horizontal
           bounces={false}
@@ -114,6 +99,4 @@ const Slider = forwardRef<Slider, SliderProps>(({ ...props }, ref) => {
       )}
     </View>
   );
-});
-
-export default Slider;
+}

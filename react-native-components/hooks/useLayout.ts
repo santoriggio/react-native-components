@@ -58,11 +58,11 @@ const useLayout = (): LayoutConfig => {
       radius: isTablet ? 16 : currentConfig.radius,
       icon_size: isTablet ? 30 : 20,
       fontSize: (size?: keyof typeof sizes) => {
-        if (typeof size != "undefined" && typeof sizes[size] != "undefined") {
-          return sizes[size];
+        if (typeof size != "undefined" && typeof currentConfig.sizes[size] != "undefined") {
+          return currentConfig.sizes[size] * (isTablet ? 1.5 : 1);
         }
 
-        return sizes["m"];
+        return currentConfig.sizes["m"] * (isTablet ? 1.5 : 1);
       },
       Colors: {
         ...currentTheme,

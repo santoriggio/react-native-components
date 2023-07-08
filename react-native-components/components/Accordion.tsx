@@ -1,4 +1,13 @@
-import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useReducer, useRef, useState } from "react";
+import React, {
+  FC,
+  forwardRef,
+  ReactNode,
+  useEffect,
+  useImperativeHandle,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { TouchableOpacity, View, ViewStyle } from "react-native";
 import Animated, {
   interpolate,
@@ -46,7 +55,11 @@ const Accordion = forwardRef<AccordionMethods, AccordionProps>(({ ...props }, re
   }));
 
   const rStyle = useAnimatedStyle(() => {
-    const height = interpolate(open.value, [0, 1], [accordion_header_height, accordion_header_height + viewHeight]);
+    const height = interpolate(
+      open.value,
+      [0, 1],
+      [accordion_header_height, accordion_header_height + viewHeight]
+    );
     return {
       height,
     };
@@ -96,7 +109,12 @@ const Accordion = forwardRef<AccordionMethods, AccordionProps>(({ ...props }, re
       >
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
           {typeof props.icon != "undefined" && props.icon != "" && (
-            <Icon name={props.icon} color={props.color} style={{ marginRight: spacing }} size={icon_size * 1.2} />
+            <Icon
+              name={props.icon}
+              color={props.color}
+              style={{ marginRight: spacing }}
+              size={icon_size * 1.2}
+            />
           )}
           <View style={{ flex: 1 }}>
             <Text

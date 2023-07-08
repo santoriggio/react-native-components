@@ -17,12 +17,18 @@ function Text({ ...props }: TextProps) {
   return (
     <DefaultText
       {...props}
+      maxFontSizeMultiplier={1.3}
       style={[
         {
           color: Colors.text,
           fontSize: fontSize(props.size),
           // fontFamily: typeof props.bold != "undefined" ? "bold" : "regular",
-          fontFamily: typeof props.bold != "undefined" && hasBold ? "bold" : hasRegular ? "regular" : undefined,
+          fontFamily:
+            typeof props.bold != "undefined" && hasBold
+              ? "bold"
+              : hasRegular
+              ? "regular"
+              : undefined,
           includeFontPadding: false,
         },
         props.style,

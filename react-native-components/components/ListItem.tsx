@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import { TouchableOpacity, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -17,7 +17,8 @@ function ListItem({ ...props }: any) {
     if (typeof props.action != "undefined") {
       triggerAction(props.action, props);
 
-      if (typeof props.action.preventDefault != "undefined" && props.action.preventDefault == true) return;
+      if (typeof props.action.preventDefault != "undefined" && props.action.preventDefault == true)
+        return;
     }
 
     if (typeof props.onPress != "undefined") {
@@ -36,7 +37,10 @@ function ListItem({ ...props }: any) {
     if (typeof props.longPressAction != "undefined") {
       triggerAction(props.longPressAction, props);
 
-      if (typeof props.longPressAction.preventDefault != "undefined" && props.longPressAction.preventDefault == true)
+      if (
+        typeof props.longPressAction.preventDefault != "undefined" &&
+        props.longPressAction.preventDefault == true
+      )
         return;
     }
 
@@ -58,7 +62,10 @@ function ListItem({ ...props }: any) {
       )}
 
       {typeof props.unread != "undefined" && (
-        <Bullet color={props.unread ? "info" : undefined} style={{ marginHorizontal: spacing * 0.8 }} />
+        <Bullet
+          color={props.unread ? "info" : undefined}
+          style={{ marginHorizontal: spacing * 0.8 }}
+        />
       )}
 
       <ScreenDrawer
@@ -66,7 +73,7 @@ function ListItem({ ...props }: any) {
         style={{
           marginTop: spacing * 0.5,
           marginLeft: typeof props.unread != "undefined" ? -spacing : undefined,
-          borderBottomWidth: 1,
+          borderBottomWidth: typeof props.isLast != "undefined" && props.isLast ? 0 : 1,
           borderColor: Colors.border,
           ...props.screenDrawerStyle,
         }}
@@ -78,4 +85,4 @@ function ListItem({ ...props }: any) {
   );
 }
 
-export default ListItem;
+export default memo(ListItem);

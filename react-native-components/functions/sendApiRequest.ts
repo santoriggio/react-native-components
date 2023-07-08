@@ -1,6 +1,6 @@
 import config from "../utils/Config";
 import deepMerge from "./deepMerge";
-
+import triggerAction from "./triggerAction";
 interface I {
   enpoint: string;
   params: any;
@@ -19,6 +19,17 @@ interface I {
     };
   };
 }
+
+/**
+
+
+{
+  type: 'listener',
+  event: 'refreshUser',
+  params: {}
+}
+
+ */
 
 const sendApiRequest = async (
   endpoint: I["enpoint"],
@@ -61,6 +72,14 @@ const sendApiRequest = async (
   try {
     const json = await result.json();
 
+    if (typeof result.headers != "undefined" && result.headers.map["x-fw360-action"]) {
+      if (isJSON(result.headers.map["x-fw360-action"])) {
+        const formatted = JSON.parse(result.headers.map["x-fw360-action"]);
+
+        triggerAction(formatted);
+      }
+    }
+
     if (typeof json == "undefined" || json == null || Array.isArray(json)) {
       return {
         error: json,
@@ -97,3 +116,12 @@ const sendApiRequest = async (
 };
 
 export default sendApiRequest;
+
+function isJSON(json: string) {
+  try {
+    JSON.parse(json);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}

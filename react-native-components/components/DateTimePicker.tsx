@@ -9,7 +9,7 @@ import Text from "./Text";
 interface IProps {
   minimumDate?: Date;
   maximumDate?: Date;
-  date: string | number;
+  date: string | Date;
   onChangeDate: (newDate: Date) => void;
   mode?: "date" | "datetime" | "time";
 }
@@ -25,15 +25,7 @@ function DateTimePicker({ ...props }: IProps) {
   useEffect(() => {
     if (typeof props.date !== "undefined" && props.date !== null && props.date !== "") {
       if (needCheck.current) {
-        let toReturn = undefined;
-
-        if (!isNaN(props.date as number)) {
-          toReturn = formatDate((props.date as number) * 1000, "iso", "timestamp");
-        } else {
-          toReturn = formatDate(props.date, "iso", "YYYY-MM-DD hh:mm:ss");
-        }
-
-        setFormatted(toReturn);
+        setFormatted(formatDate("iso", props.date));
 
         needCheck.current = false;
       } else {
@@ -61,13 +53,13 @@ function DateTimePicker({ ...props }: IProps) {
         padding: spacing,
         justifyContent: "center",
         borderRadius: radius,
-        height: spacing * 4.2,
+        height: spacing * 4.3,
       }}
       onPress={toggle}
     >
       {typeof formatted !== "undefined" && formatted !== null ? (
         <Text>
-          {formatDate(formatted, props.mode === "date" ? "DD/MM/YYYY" : "DD/MM/YYYY hh:mm", "iso")}
+          {formatDate(props.mode === "date" ? "DD/MM/YYYY" : "DD/MM/YYYY hh:mm", formatted)}
         </Text>
       ) : (
         <Text style={{ color: Colors.gray }}>Seleziona una data</Text>
