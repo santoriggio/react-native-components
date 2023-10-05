@@ -440,7 +440,12 @@ const RenderComponent = ({ component, ...props }: I) => {
   }
 };
 
-function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: ScreenDrawerProps) {
+function ScreenDrawer({
+  hasMargin = true,
+  drillProps = false,
+  flatListProps = {},
+  ...props
+}: ScreenDrawerProps) {
   const { spacing, Colors, radius, fontSize } = useLayout();
   const [hiddenComponents, setHiddenComponents] = useState<string[]>(
     typeof props.hiddenComponents != "undefined" ? props.hiddenComponents : []
@@ -870,8 +875,11 @@ function ScreenDrawer({ hasMargin = true, drillProps = false, ...props }: Screen
     return (
       <FlatList
         {...flatlist}
-        {...props.flatListProps}
-        mergeParams={{ data: Object.keys(otherParams).length > 0 ? otherParams : undefined }}
+        {...flatListProps}
+        mergeParams={{
+          data: Object.keys(otherParams).length > 0 ? otherParams : undefined,
+          ...flatListProps.mergeParams,
+        }}
         ListHeaderComponent={
           typeof flatlist.header != "undefined" && flatlist.header.length > 0 ? (
             <ScreenDrawer {...props} content={flatlist.header} />
