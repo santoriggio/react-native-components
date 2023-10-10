@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardType, Linking, StyleSheet, TouchableOpacity, View } from "react-native";
 import useLayout from "../hooks/useLayout";
 import PhoneInput from "./PhoneInput";
@@ -37,8 +37,6 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
 
   const [data, setData] = useState<any>(value);
 
-  const [dataDetails, setDataDetails] = useState<any>(undefined);
-
   useEffect(() => {
     if (component.type === "address") {
       if (typeof value !== "undefined" && value !== "") {
@@ -49,25 +47,25 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
     setData(value);
   }, [JSON.stringify(value)]);
 
-  const onChangeInput = (newValue: any, details?: any) => {
-    let toReturn = newValue;
+  const onChangeInput = useCallback(
+    (newValue: any, details?: any) => {
+      let toReturn = newValue;
 
-    if (typeof newValue == "undefined") {
-      //Is boolean
-      if (typeof component.link != "undefined") {
-        return Linking.openURL(component.link);
+      if (typeof newValue == "undefined") {
+        //Is boolean
+        if (typeof component.link != "undefined") {
+          return Linking.openURL(component.link);
+        }
+
+        toReturn = typeof data == "undefined" ? true : !data;
       }
 
-      toReturn = typeof data == "undefined" ? true : !data;
-    }
-
-    setData(toReturn);
-    setDataDetails(details);
-
-    if (typeof onChange != "undefined" && typeof onChange == "function") {
-      onChange(toReturn, details);
-    }
-  };
+      if (typeof onChange != "undefined" && typeof onChange == "function" && data != newValue) {
+        onChange(toReturn, details);
+      }
+    },
+    [data]
+  );
 
   const keyboardType = useMemo(() => {
     let t: KeyboardType = "default";
@@ -140,15 +138,13 @@ function Input({ value, onChange, required = false, ...component }: InputProps) 
                 ...extras,
               };
 
-              console.log(obj);
-
-              if (onChange) onChangeInput(data.description, obj);
+              onChangeInput(data.description, obj);
             }
           }}
           enablePoweredByContainer={false}
-          // currentLocation
+          // // currentLocation
           fetchDetails
-          // currentLocationLabel="Posizione attuale"
+          // // currentLocationLabel="Posizione attuale"
           textInputProps={{
             onChangeText: onChangeInput,
             placeholderTextColor: Colors.gray,

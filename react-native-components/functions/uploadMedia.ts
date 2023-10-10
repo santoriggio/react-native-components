@@ -83,15 +83,19 @@ export default async function uploadMedia(props: UploadMedia = { global: 0 }) {
 async function imagePicker(
   options: ImageLibraryOptions = {
     mediaType: "photo",
+  },
+  global: UploadMedia["global"] = 0
+) {
+  const defaultOptions: ImageLibraryOptions = {
+    mediaType: "photo",
     selectionLimit: 25,
     includeBase64: false,
     maxHeight: 1980,
     maxWidth: 1980,
     quality: 0.8,
-  },
-  global: UploadMedia["global"] = 0
-) {
-  const result = await launchImageLibrary(options);
+  };
+
+  const result = await launchImageLibrary({ ...defaultOptions, ...options });
 
   if (result.didCancel || typeof result.assets === "undefined") return;
 
