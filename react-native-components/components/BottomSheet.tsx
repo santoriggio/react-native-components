@@ -142,7 +142,13 @@ const BottomSheet: FC = () => {
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop {...props} onPress={hide} opacity={0.3} appearsOnIndex={0} disappearsOnIndex={-1} />
+      <BottomSheetBackdrop
+        {...props}
+        onPress={hide}
+        opacity={0.3}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
     ),
     []
   );
@@ -153,6 +159,7 @@ const BottomSheet: FC = () => {
       snapPoints={snapPoints}
       backdropComponent={renderBackdrop}
       enablePanDownToClose
+
       index={-1}
       style={{
         backgroundColor: Colors.background,
@@ -169,7 +176,11 @@ const BottomSheet: FC = () => {
       onChange={handleSheetChanges}
       handleStyle={{ backgroundColor: Colors.background }}
       backgroundStyle={{ backgroundColor: Colors.background }}
-      handleIndicatorStyle={{ backgroundColor: Colors.gray, width: spacing * 5, height: spacing / 2 }}
+      handleIndicatorStyle={{
+        backgroundColor: Colors.gray,
+        width: spacing * 5,
+        height: spacing / 2,
+      }}
     >
       <BottomSheetScrollView bounces={false} contentContainerStyle={{ paddingBottom: _bottom }}>
         <ScreenDrawer content={content} scrollEnabled={false} />

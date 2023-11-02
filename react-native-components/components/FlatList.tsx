@@ -75,6 +75,12 @@ const FlatList = forwardRef<DefaultFlatList<any>, FlatListProps<any>>(
       handleErrors,
     });
 
+    useEffect(() => { 
+      if (props.onLoadingStateChange) {
+        props.onLoadingStateChange(isLoading)
+      }
+    },[isLoading])
+
     useEffect(() => {
       const listener = AppSettings.addListener("refresh", (x) => {
         const module_id =

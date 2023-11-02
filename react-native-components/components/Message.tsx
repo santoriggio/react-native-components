@@ -1,4 +1,11 @@
-import React, { forwardRef, MutableRefObject, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  MutableRefObject,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Alert, AlertButton, TouchableOpacity, View } from "react-native";
 import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { setPath } from "react-native-reanimated/lib/types/lib/reanimated2/animation/styleAnimation";
@@ -81,7 +88,7 @@ function Message({ ...props }: MessageProps) {
           typeof newMessage.buttons != "undefined" && Object.keys(newMessage.buttons).length > 0
             ? newMessage.buttons
             : undefined;
-        
+
         Alert.alert(newMessage.title, newMessage.message, formattedButtons);
       }
     },
@@ -112,7 +119,8 @@ function Message({ ...props }: MessageProps) {
         alignItems: "center",
       }}
     >
-      {typeof icons[typeof message.role != "undefined" ? message.role : "primary"] != "undefined" && (
+      {typeof icons[typeof message.role != "undefined" ? message.role : "primary"] !=
+        "undefined" && (
         <Icon
           name={icons[typeof message.role != "undefined" ? message.role : "primary"]}
           color="white"

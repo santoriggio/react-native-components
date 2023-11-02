@@ -10,11 +10,16 @@ interface UploadMedia {
   global?: 1 | 0;
   mimetype?: Mimetype | Mimetype[];
   options?: ImageLibraryOptions;
+  onLoadStart?: ()=>void;
+  onLoadEnd?:()=>void
 }
 
 export default async function uploadMedia(props: UploadMedia = { global: 0 }) {
+ 
+ 
+ 
   if (typeof props.mimetype == "undefined" || props.mimetype.length == 0) {
-    return imagePicker({ ...props.options, mediaType: "photo" }, props.global);
+    return imagePicker({ ...props.options, mediaType: "photo" }, props.global, props.onLoadStart, props.onLoadEnd);
   }
 
   if (typeof props.mimetype == "string") {
@@ -25,7 +30,7 @@ export default async function uploadMedia(props: UploadMedia = { global: 0 }) {
     let mediaType: ImageLibraryOptions["mediaType"] =
       props.mimetype == "image/*" ? "photo" : "video";
 
-    return imagePicker({ ...props.options, mediaType }, props.global);
+    return imagePicker({ ...props.options, mediaType }, props.global, props.onLoadStart, props.onLoadEnd);
   }
 
   if (props.mimetype.includes("application/*")) {
@@ -51,7 +56,7 @@ export default async function uploadMedia(props: UploadMedia = { global: 0 }) {
         {
           text: "Media",
           onPress: () => {
-            return imagePicker({ ...props.options, mediaType }, props.global);
+            return imagePicker({ ...props.options, mediaType }, props.global, props.onLoadStart, props.onLoadEnd);
           },
         },
         {
@@ -76,7 +81,7 @@ export default async function uploadMedia(props: UploadMedia = { global: 0 }) {
     if (props.mimetype.includes("image/*") && props.mimetype.includes("video/*")) {
       mediaType = "mixed";
     }
-    return imagePicker({ ...props.options, mediaType }, props.global);
+    return imagePicker({ ...props.options, mediaType }, props.global, props.onLoadStart, props.onLoadEnd);
   }
 }
 
@@ -84,7 +89,9 @@ async function imagePicker(
   options: ImageLibraryOptions = {
     mediaType: "photo",
   },
-  global: UploadMedia["global"] = 0
+  global: UploadMedia["global"] = 0,
+  onLoadStart?: ()=>void,
+  onLoadEnd?:()=>void
 ) {
   const defaultOptions: ImageLibraryOptions = {
     mediaType: "photo",
@@ -115,6 +122,13 @@ async function imagePicker(
 
   if (typeof hasMediaToUpload !== "undefined" && hasMediaToUpload.length > 0) {
     formatted = [...hasMediaToUpload, ...formatted];
+  }
+
+
+  console.log(onLoadStart)
+
+  if(onLoadStart){
+    onLoadStart()
   }
 
   return Storage.set("mediaToUpload", formatted);

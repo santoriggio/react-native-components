@@ -18,7 +18,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
 } from "react-native";
-import Animated, { FadeIn, useSharedValue } from "react-native-reanimated";
+import Animated, { FadeIn, SlideInDown, SlideOutDown, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import useLayout from "../hooks/useLayout";
@@ -221,10 +221,19 @@ function SearchPicker() {
 
   const getTabs = async (m: string) => {
     if (m == "contenuti_media") {
+
       return uploadMedia(
         {
           mimetype: lastOption.mimetype,
           limit: lastOption.limit,
+          onLoadStart: () => {
+            const lastIndex = options.length - 1;
+            const currentRef = screens.current[lastIndex];
+
+            console.log(lastIndex, screens.current)
+
+            currentRef.setLoading(true)
+          }
         },
         lastOption.global
       );
@@ -368,18 +377,25 @@ function SearchPicker() {
     return undefined;
   }, [JSON.stringify(lastOption)]);
 
+
+  if(!modalVisible) return null
+  
   return (
-    <Modal
-      visible={modalVisible}
-      animationType="slide"
-      onRequestClose={() => SearchPickerController.hide(1)}
+    <Animated.View
+      entering={SlideInDown}
+      exiting={SlideOutDown}
+      style={StyleSheet.absoluteFillObject}
+      // visible={modalVisible}
+      // animationType="slide"
+      // presentationStyle='overFullScreen'
+
+      // onRequestClose={() => SearchPickerController.hide(1)}
     >
       <Header
         left={headerLeft}
         right={headerRight}
         searchBarOptions={searchBarOptions}
         borderBottom={typeof lastOption.tabs != "undefined" ? false : true}
-        containerStyle={{ paddingTop: Platform.select({ android: 0, ios: top }) }}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS == "ios" ? "height" : undefined}
@@ -404,7 +420,7 @@ function SearchPicker() {
           );
         })}
       </KeyboardAvoidingView>
-    </Modal>
+    </Animated.View>
   );
 }
 
@@ -422,6 +438,8 @@ const CustomScreen = forwardRef<any, any>(
     const [flags, setFlags] = useState<any>(Flags);
 
     const [canContinue, setCanContinue] = useState<boolean>(false);
+
+    const [loading,setLoading] = useState<boolean>(false)
 
     useEffect(() => {
       if (option.type == "flag") {
@@ -474,6 +492,7 @@ const CustomScreen = forwardRef<any, any>(
     useImperativeHandle(ref, () => ({
       setData: (newData: any) => setData(newData),
       getData: () => data,
+      setLoading
     }));
 
     if (option.type == "modulepicker") {
@@ -486,6 +505,9 @@ const CustomScreen = forwardRef<any, any>(
               selected,
               setSelected,
               onPressItem,
+              onLoadingStateChange: (state) => {
+                setLoading(state)
+              }
             }}
           />
           {typeof option.limit != "undefined" && option.limit > 1 && (
@@ -498,7 +520,8 @@ const CustomScreen = forwardRef<any, any>(
               }}
             >
               <Button
-                title={`Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
+                title={loading ? 'Attendi': `Conferma (${typeof selected != "undefined" ? selected.length : 0})`}
+               active={!loading}
                 action={() => {
                   if (typeof option != "undefined" && typeof option.type != "undefined") {
                     if (option.type == "modulepicker") {
